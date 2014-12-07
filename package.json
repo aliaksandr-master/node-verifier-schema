@@ -1,0 +1,41 @@
+{
+  "name": "node-verifier-schema",
+  "version": "0.0.2",
+  "description": "verify JSON plain object schema",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "grunt jshint && nodeunit test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aliaksandr-pasynkau/node-verifier-schema.git"
+  },
+  "keywords": [
+    "json",
+    "schema",
+    "verify",
+    "validate"
+  ],
+  "author": "aliaksandr-pasynkau",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aliaksandr-pasynkau/node-verifier-schema/issues"
+  },
+  "homepage": "https://github.com/aliaksandr-pasynkau/node-verifier-schema",
+  "dependencies": {
+    "async": "~0.9.0",
+    "lodash": "~2.4.1",
+    "error": "~4.3.0"
+  },
+  "devDependencies": {
+    "colors": "^1.0.3",
+    "nodeunit": "~0.9.0",
+    "grunt": "~0.4.5",
+    "grunto": "~1.2.1",
+    "grunt-contrib-jshint": "~0.10.0",
+    "node-verifier": "~0.0.2"
+  }
+}
