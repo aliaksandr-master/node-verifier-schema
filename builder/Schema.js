@@ -5,12 +5,9 @@ var _ = require('lodash');
 /**
  * Create instance of Schema
  *
- * @constructor
+ * @constructors
  * @this {Schema}
  * @class Schema
- * @throws {TypeError} If parent node hasn't Schema type
- * @throws {Error} If name not specified, when parent node pass as arguments
- * @throws {TypeError} If is not string type
  * @return {Schema}
  */
 function Schema () {
@@ -20,42 +17,71 @@ function Schema () {
 }
 
 Schema.prototype = {
-
+	/**
+	 * attach schema to this object
+	 *
+	 * @method
+	 * @param {Schema} schema - object for attach.
+	 * @param {String} name - field name for attach.
+	 * @throws {TypeError} If schema isn't Schema type
+	 * @throws {TypeError} If name empty or isn't String type
+	 * @return {Schema} @this
+	 */
 	attach: function (schema, name) {
 		if (!(schema instanceof Schema)) {
-			throw new TypeError('attach: schema node must be instance of Schema');
+			throw new TypeError('schema node must be instance of Schema');
 		}
 
 		schema.attachTo(this, name);
 
 		schema = null;
+
 		return this;
 	},
 
+	/**
+	 * attach this object to schema
+	 *
+	 * @method
+	 * @param {Schema} schema - attach destination object.
+	 * @param {String} name - field name for attach.
+	 * @throws {TypeError} If schema isn't Schema type
+	 * @throws {TypeError} If name empty or isn't String type
+	 * @throws {Error} If schema already has the same key name
+	 * @return {Schema} @this
+	 */
 	attachTo: function (schema, name) {
 		if (!(schema instanceof Schema)) {
-			throw new TypeError('attachTo: schema node must be instance of Schema');
+			throw new TypeError('schema node must be instance of Schema');
 		}
 
 		if (!name || !_.isString(name)) {
-			throw new Error('attach: invalid scheme field name must be non-empty string, "' + name + '" ' + Object.prototype.toString.call(name) + ' given');
+			throw new TypeError('invalid scheme field name must be non-empty string, "' + name + '" ' + Object.prototype.toString.call(name) + ' given');
 		}
 
 		this.name = name;
 		this.path = (schema.path || []).concat(name);
-		//this.slug = '/' + this.path.join('/');
 
 		schema._addField(this, name);
 
 		schema = null;
+
 		return this;
 	},
 
+
+	/**
+	 * @private
+	 * @param {Schema} schema - attach destination object.
+	 * @param {String} name - field name for attach.
+	 * @throws {Error} If schema already has the same key name
+	 * @return {Schema} @this
+	 */
 	_addField: function (schema, name) {
 		if (!this.keys) {
 			this.keys = [];
 		} else if (_.contains(this.keys, name)) {
-			throw new Error('duplicate key "' + schema.slug + '"');
+			throw new Error('duplicate key "' + name + '" at "/' + (schema.path && schema.path.join('/')) + '"');
 		}
 
 		this.keys.push(name);
@@ -66,16 +92,26 @@ Schema.prototype = {
 
 		this.fields.push(schema);
 		schema = null;
+
+		return this;
 	},
 
+	/**
+	 * @param {Boolean} isRequired - flag.
+	 * @return {Schema} @this
+	 */
 	setRequired: function (isRequired) {
-		if (isRequired == null || isRequired) {
+		if (isRequired) {
 			this.isRequired = true;
 		}
 
 		return this;
 	},
 
+	/**
+	 * @param {Boolean} nestedTypeIsArray - flag.
+	 * @return {Schema} @this
+	 */
 	typeArray: function (nestedTypeIsArray) {
 		if (nestedTypeIsArray) {
 			this.isArray = true;
@@ -89,7 +125,7 @@ Schema.prototype = {
 	 *
 	 * @method
 	 * @param {Array|Object|String|Function} validation - validation options.
-	 * @return {Schema}
+	 * @return {Schema} @this
 	 */
 	validate: function (validation) {
 		if (validation) {
@@ -111,9 +147,9 @@ Schema.prototype = {
 	 * set nested fields builder
 	 *
 	 * @method
-	 * @param {Function} nested - builder function, has two functions in arguments [required, options].
+	 * @param {Function} builder - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
-	 * @return {Schema}
+	 * @return {Schema} @this
 	 */
 	build: function (builder) {
 		if (builder) {
@@ -134,9 +170,9 @@ Schema.prototype = {
 	 * @param {String} name - [required] - field name.
 	 * @param {Boolean} isRequired - [optional] - is required flag, default is true
 	 * @param {Array|String|Object|Function} validation - [optional] - validation options.
-	 * @param {Function} nested - [optional] - builder function, has two functions in arguments [required, options].
+	 * @param {Function|Schema} nested - [optional] - builder function, has two functions in arguments [required, options].
 	 * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
-	 * @return {Schema}
+	 * @return {Schema} @this
 	 */
 	field: function (name, isRequired, validation, nested, nestedTypeIsArray) {
 		if (_.isString(nested)) {
@@ -160,24 +196,29 @@ Schema.prototype = {
 		return schema;
 	},
 
+	/**
+	 * clone this schema
+	 *
+	 * @method
+	 * @return {Schema} new object (clone)
+	 */
 	clone: function () {
 		var clone = new Schema();
 
 		_.each(this.fields, function (fieldSchema) {
-			fieldSchema
-				.clone()
-				.attachTo(clone, fieldSchema.name)
-			;
+			fieldSchema.clone().attachTo(clone, fieldSchema.name);
 		});
 
-		clone.validations = _.cloneDeep(this.validations);
-
-		if (this.isArray) {
-			clone.isArray = true;
+		if (this.validations !== undefined) {
+			clone.validations = _.cloneDeep(this.validations);
 		}
 
-		if (this.isRequired) {
-			clone.isRequired = true;
+		if (this.isArray !== undefined) {
+			clone.isArray = this.isArray;
+		}
+
+		if (this.isRequired !== undefined) {
+			clone.isRequired = this.isRequired;
 		}
 
 		return clone;
@@ -220,7 +261,7 @@ Schema.prototype = {
  *
  * @static
  * @param {Array|String|Object|Function} validation - [optional] - validation options.
- * @param {Function} nested - [optional] - builder function, has two functions in arguments [required, options].
+ * @param {Function|Schema} nested - [optional] - builder function, has two functions in arguments [required, options].
  * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
  * @return {Schema}
  */
@@ -231,6 +272,18 @@ Schema.build = function (validation, nested, nestedTypeIsArray) {
 		.typeArray(nestedTypeIsArray);
 };
 
+
+
+/**
+ * Schema builder. return new Schema instance; register this schema
+ *
+ * @static
+ * @param {String} name - [required] - name for register.
+ * @param {Array|String|Object|Function} validation - [optional] - validation options.
+ * @param {Function|Schema} nested - [optional] - builder function, has two functions in arguments [required, options].
+ * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
+ * @return {Schema}
+ */
 Schema.create = function (name, validation, nested, nestedTypeIsArray) {
 	var schema = Schema.build(validation, nested, nestedTypeIsArray);
 	return Schema.register(name, schema);
@@ -238,6 +291,18 @@ Schema.create = function (name, validation, nested, nestedTypeIsArray) {
 
 var register = {};
 
+
+/**
+ * Schema register
+ *
+ * @static
+ * @param {String} name - [required] - name for register.
+ * @param {Schema} schema - [required] - schema for register
+ * @throws {TypeError} If invalid name type
+ * @throws {TypeError} If schema name type
+ * @throws {ReferenceError} If schema was already registered
+ * @return {Schema}
+ */
 Schema.register = function (name, schema) {
 	if (!_.isString(name)) {
 		throw new TypeError('invalid name type, must be string');
@@ -255,6 +320,15 @@ Schema.register = function (name, schema) {
 	return schema;
 };
 
+/**
+ * get registered schema
+ *
+ * @static
+ * @param {String} name - [required] - name for register.
+ * @throws {TypeError} If invalid name type
+ * @throws {ReferenceError} If schema was not registered before
+ * @return {Schema}
+ */
 Schema.get = function (name) {
 	if (!_.isString(name)) {
 		throw new TypeError('invalid name type, must be string');
