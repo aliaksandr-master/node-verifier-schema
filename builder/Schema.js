@@ -8,47 +8,82 @@ var _ = require('lodash');
  * @constructor
  * @this {Schema}
  * @class Schema
- * @param {string} name - field name, optional.
- * @param {Schema} parentNode - .
- * @param {object} options - hash of options { separator: '/', validator: function (validate) { return validate; } }.
  * @throws {TypeError} If parent node hasn't Schema type
  * @throws {Error} If name not specified, when parent node pass as arguments
  * @throws {TypeError} If is not string type
  * @return {Schema}
  */
-function Schema (name, parent, options) {
+function Schema () {
 	if (!(this instanceof Schema)) {
-		return new Schema(name, parent, options);
-	}
-
-	this._options = _.extend({}, Schema.options, options);
-
-	if (parent) {
-		if (!(parent instanceof Schema)) {
-			throw new TypeError('parent node must be instance of Schema');
-		}
-
-		if (!name) {
-			throw new Error('scheme field name must be specified');
-		}
-
-		if (!_.isString(name)) {
-			throw new TypeError('scheme field name must be string, "' + Object.prototype.toString.call(name) + '" given');
-		}
-	}
-
-	if (parent) {
-		if (parent.name) {
-			this.path = (parent.path || []).concat(parent.name);
-		}
-	}
-
-	if (name != null) {
-		this.name = name || '';
+		return new Schema();
 	}
 }
 
 Schema.prototype = {
+
+	attach: function (schema, name) {
+		if (!(schema instanceof Schema)) {
+			throw new TypeError('attach: schema node must be instance of Schema');
+		}
+
+		schema.attachTo(this, name);
+
+		schema = null;
+		return this;
+	},
+
+	attachTo: function (schema, name) {
+		if (!(schema instanceof Schema)) {
+			throw new TypeError('attachTo: schema node must be instance of Schema');
+		}
+
+		if (!name || !_.isString(name)) {
+			throw new Error('attach: invalid scheme field name must be non-empty string, "' + name + '" ' + Object.prototype.toString.call(name) + ' given');
+		}
+
+		this.name = name;
+		this.path = (schema.path || []).concat(name);
+		//this.slug = '/' + this.path.join('/');
+
+		schema._addField(this, name);
+
+		schema = null;
+		return this;
+	},
+
+	_addField: function (schema, name) {
+		if (!this.keys) {
+			this.keys = [];
+		} else if (_.contains(this.keys, name)) {
+			throw new Error('duplicate key "' + schema.slug + '"');
+		}
+
+		this.keys.push(name);
+
+		if (!this.fields) {
+			this.fields = [];
+		}
+
+		this.fields.push(schema);
+		schema = null;
+	},
+
+	setRequired: function (isRequired) {
+		if (isRequired == null || isRequired) {
+			this.isRequired = true;
+		}
+
+		return this;
+	},
+
+	typeArray: function (nestedTypeIsArray) {
+		if (nestedTypeIsArray) {
+			this.isArray = true;
+		}
+
+		return this;
+	},
+
 	/**
 	 * set validate options. can be called several times
 	 *
@@ -62,7 +97,11 @@ Schema.prototype = {
 				this.validations = [];
 			}
 
-			this.validations.push(this._options.validator ? this._options.validator(validation) : validation);
+			if (!_.isArray(validation)) {
+				this.validations.push(validation);
+			} else {
+				this.validations = this.validations.concat(validation);
+			}
 		}
 
 		return this;
@@ -73,21 +112,16 @@ Schema.prototype = {
 	 *
 	 * @method
 	 * @param {Function} nested - builder function, has two functions in arguments [required, options].
-	 * @param {Boolean} nestedTypeIsArray - set type Array of current object of Schema.
 	 * @throws {TypeError} If nested is not a function if specified
 	 * @return {Schema}
 	 */
-	nested: function (nested, nestedTypeIsArray) {
-		if (nested) {
-			if (!_.isFunction(nested)) {
+	build: function (builder) {
+		if (builder) {
+			if (!_.isFunction(builder)) {
 				throw new TypeError('nested builder must be function');
 			}
 
-			nested.call(this, this.required.bind(this), this.optional.bind(this));
-		}
-
-		if (nestedTypeIsArray) {
-			this.isArray = true;
+			builder.call(this, this.required.bind(this), this.optional.bind(this));
 		}
 
 		return this;
@@ -105,81 +139,49 @@ Schema.prototype = {
 	 * @return {Schema}
 	 */
 	field: function (name, isRequired, validation, nested, nestedTypeIsArray) {
-		var schema = new Schema(name, this, this._options);
+		if (_.isString(nested)) {
+			nested = Schema.get(nested);
+		}
 
-		this._addNestedSchema(schema, name, isRequired);
+		var isSchema = nested instanceof Schema;
+		var schema = (isSchema ? nested.clone() : new Schema())
+			.attachTo(this, name);
 
-		schema.validate(validation).nested(nested, nestedTypeIsArray);
+		if (!isSchema) {
+			schema.build(nested);
+		}
 
+		schema
+			.validate(validation)
+			.setRequired(isRequired)
+			.typeArray(nestedTypeIsArray);
+
+		nested = null;
 		return schema;
 	},
 
-	_addNestedSchema: function (schema, name, isRequired) {
-		if (isRequired || isRequired == null) {
-			schema.isRequired = true;
+	clone: function () {
+		var clone = new Schema();
+
+		_.each(this.fields, function (fieldSchema) {
+			fieldSchema
+				.clone()
+				.attachTo(clone, fieldSchema.name)
+			;
+		});
+
+		clone.validations = _.cloneDeep(this.validations);
+
+		if (this.isArray) {
+			clone.isArray = true;
 		}
 
-		if (!this.keys) {
-			this.keys = [];
-		} else if (_.contains(this.keys, schema.name)) {
-			throw new Error('duplicate key "' + schema.name + '" in schema (path: "' + this.path + '")');
+		if (this.isRequired) {
+			clone.isRequired = true;
 		}
 
-		this.keys.push(schema.name);
-
-		if (!this.fields) {
-			this.fields = [];
-		}
-
-		this.fields.push(schema);
+		return clone;
 	},
-
-	schema: function (name, isRequired, validation, schema) {
-		if (_.isString(schema)) {
-			schema = Schema.get(schema);
-		}
-
-		if (!(schema instanceof Schema)) {
-			throw new TypeError('argument must be instance of Schema');
-		}
-
-		var recursiveIterate = function (schema, parent) {
-			var _schema = new Schema(schema.name, parent, parent.options);
-
-			if (schema.validations) {
-				_schema.validations = _.clone(schema.validations);
-			}
-
-			if (schema.keys) {
-				_schema.keys = _.clone(schema.keys);
-			}
-
-			if (schema.isRequired) {
-				_schema.isRequired = true;
-			}
-
-			_.each(schema.fields, function (field) {
-				field = recursiveIterate(field, _schema);
-				_schema._addNestedSchema(field, field.name, field.isRequired);
-			});
-
-			return _schema;
-		};
-
-		var _schema = recursiveIterate(schema, this);
-
-		_schema.validate(validation);
-
-		this._addNestedSchema(_schema, name, isRequired);
-	},
-
-	//clean: function () {
-	//	_.each(this.fields, function (schema) {
-	//		schema.clean();
-	//	});
-	//
-	//	return this;
-	//},
 
 	/**
 	 * add new required nested schema by construct
@@ -219,23 +221,19 @@ Schema.prototype = {
  * @static
  * @param {Array|String|Object|Function} validation - [optional] - validation options.
  * @param {Function} nested - [optional] - builder function, has two functions in arguments [required, options].
- * @param {Boolean} nestedTypeArray - [optional] - set type Array of current object of Schema.
- * @param {Object} options - [optional] - options of schema creation
+ * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
  * @return {Schema}
  */
-Schema.build = function (validation, nested, nestedTypeArray, options) {
-	var schema = new Schema(null, null, options);
-	schema.validate(validation);
-	schema.nested(nested, nestedTypeArray);
-	//schema.clean();
-
-	console.log(require('util').inspect(schema, { depth: null, colors: true }));
-	return schema;
+Schema.build = function (validation, nested, nestedTypeIsArray) {
+	return new Schema()
+		.build(nested)
+		.validate(validation)
+		.typeArray(nestedTypeIsArray);
 };
 
-Schema.options = {
-	separator: '/',
-	validator: null
+Schema.create = function (name, validation, nested, nestedTypeIsArray) {
+	var schema = Schema.build(validation, nested, nestedTypeIsArray);
+	return Schema.register(name, schema);
 };
 
 var register = {};
