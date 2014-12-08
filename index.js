@@ -3,6 +3,7 @@
 var _ = require('lodash');
 var verifier = require('./verifier');
 var builder = require('./builder');
+var Schema = require('./builder/Schema');
 
 var schemaVerifier = module.exports = function (options) {
 	var schemaBuilder = builder(options);
@@ -19,3 +20,4 @@ var schemaVerifier = module.exports = function (options) {
 
 schemaVerifier.schemaBuilder = builder;
 schemaVerifier.schemaVerifier = verifier;
+schemaVerifier.Schema = Schema;

@@ -1,6 +1,7 @@
 "use strict";
 
 var _ = require('lodash');
+var Schema = require('./Schema');
 
 
 var schemaBuilder = function schemaBuilder (options) {
@@ -72,7 +73,7 @@ var schemaBuilder = function schemaBuilder (options) {
 	};
 
 	return function (validation, nestedBuilder) {
-		var schema = {};
+		var schema = new Schema();
 		schema = patchValidation(schema, validation);
 		schema = patchNested(schema, nestedBuilder);
 		return schema;
@@ -80,3 +81,4 @@ var schemaBuilder = function schemaBuilder (options) {
 };
 
 module.exports = schemaBuilder;
+module.exports.Schema = Schema;

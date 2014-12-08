@@ -2,6 +2,7 @@
 
 var _ = require('lodash');
 var async = require('async');
+var Schema = require('../builder/Schema');
 
 var patchInfoObject = require('./patch-info-object');
 var finalDone = require('./final-done');
@@ -105,7 +106,7 @@ var validateNested = function (options, schema, currentValue, done, infoObjects,
 };
 
 module.exports = function (options, schema) {
-	if (schema == null || !_.isObject(schema)) {
+	if (!(schema instanceof Schema)) {
 		throw new Error('schema is not specified');
 	}
 
