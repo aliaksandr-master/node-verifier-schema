@@ -25,21 +25,21 @@ var _schemaBuilder = schemaBuilder({
 	validator: validator()
 });
 
-//var validateSchema1 = _schemaBuilder('type object', function (required, optional) {
-//	required('fio', 'type object', function (required, optional) {
-//		required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-//		required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-//		optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
-//	});
-//	required('age', ['type number', 'max_value 100', 'min_value 16']);
-//	required('family', ['type array', 'min_length 2', {each: ['type object']}], function (required, optional) {
-//		required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-//		required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-//		optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
-//		optional('age', ['type number', 'max_value 100', 'min_value 16']);
-//	});
-//	required('school_names', ['type array', 'min_length 2', 'not empty', {each: ['type string', 'min_length 3', 'max_length 20']}]);
-//});
+var validateSchema1 = _schemaBuilder('type object', function (required, optional) {
+	required('fio', 'type object', function (required, optional) {
+		required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
+		required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
+		optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+	});
+	required('age', ['type number', 'max_value 100', 'min_value 16']);
+	required('family', ['type array', 'min_length 2', {each: ['type object']}], function (required, optional) {
+		required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
+		required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
+		optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+		optional('age', ['type number', 'max_value 100', 'min_value 16']);
+	});
+	required('school_names', ['type array', 'min_length 2', 'not empty', {each: ['type string', 'min_length 3', 'max_length 20']}]);
+});
 
 var validateSchema2 = _schemaBuilder('type object');
 
