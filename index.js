@@ -2,14 +2,11 @@
 
 var _ = require('lodash');
 var verifier = require('./verifier');
-var builder = require('./builder');
 var Schema = require('./builder/Schema');
 
 var schemaVerifier = module.exports = function (options) {
-	var schemaBuilder = builder(options);
-
-	return function (validation, nestedBuilder) {
-		var schema = schemaBuilder(validation, nestedBuilder);
+	return function (validation, nestedBuilder, nestedTypeIsArray) {
+		var schema = Schema.build(validation, nestedBuilder, nestedTypeIsArray, options);
 
 		var schemaVerifier = verifier(options, schema);
 		schemaVerifier.schema = schema;
@@ -18,6 +15,5 @@ var schemaVerifier = module.exports = function (options) {
 	};
 };
 
-schemaVerifier.schemaBuilder = builder;
 schemaVerifier.schemaVerifier = verifier;
 schemaVerifier.Schema = Schema;
