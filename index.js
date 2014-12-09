@@ -1,7 +1,7 @@
 "use strict";
 
 var _ = require('lodash');
-var async = require('async');
+var iterate = require('./lib/iterate');
 
 /**
  * Create instance of Schema
@@ -266,7 +266,7 @@ Schema.prototype = {
 				validations = options.validator(validations);
 			}
 
-			async.reduce(validations, null, function (info, validation, done) {
+			iterate(validations, function (validation, index, done) {
 				validation(value, function (err, isValid, validationError) {
 					validationError || (validationError = {});
 
@@ -308,13 +308,13 @@ Schema.prototype = {
 	_validationInner: function (value, options, done) {
 		var that = this;
 
-		if (this.isArray) {
-			if (!_.isArray(value)) {
-				done(new Schema.ValidationError('type', 'array', this.path, value));
-				return;
-			}
+		if (Boolean(this.isArray) !== _.isArray(value)) {
+			done(new Schema.ValidationError('type', this.isArray ? 'array' : 'object', this.path, value));
+			return;
+		}
 
-			async.reduce(value, null, function (_1, value, done) {
+		if (this.isArray) {
+			iterate(value, function (value, index, done) {
 				that._validateFields(value, options, done);
 			}, done);
 
@@ -350,7 +350,7 @@ Schema.prototype = {
 			return;
 		}
 
-		async.reduce(this.fields, null, function (_1, fieldSchema, done) {
+		iterate(this.fields, function (fieldSchema, index, done) {
 			var fieldValue = value[fieldSchema.name];
 			fieldSchema.verify(fieldValue, options, function (err, isValid, validationError) {
 				err = err || validationError;
