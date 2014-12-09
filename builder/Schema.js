@@ -225,6 +225,15 @@ Schema.prototype = {
 		return clone;
 	},
 
+	/**
+	 * verify value. compare schema with some object.
+	 *
+	 * @private
+	 * @method
+	 * @param {*} value - [required] - value for check.
+	 * @param {Object} options - [optional] - validation options, default is plain object.
+	 * @param {Function} done - [required] - done-callback.
+	 */
 	verify: function (value, options, done) {
 		if (_.isFunction(options)) {
 			done = options;
@@ -232,6 +241,10 @@ Schema.prototype = {
 		}
 
 		options || (options = {});
+
+		if (!_.isFunction(done)) {
+			throw new Error('schema verify callback must be function, ' + (typeof done) + ' given');
+		}
 
 		var that = this;
 
@@ -295,6 +308,15 @@ Schema.prototype = {
 		that._validationInner(value, options, _done);
 	},
 
+	/**
+	 * verify inner object
+	 *
+	 * @private
+	 * @method
+	 * @param {*} value - [required] - value for check
+	 * @param {Object} options - [required] - validation options
+	 * @param {Function} done - [required] - done-callback
+	 */
 	_validationInner: function (value, options, done) {
 		var that = this;
 
@@ -314,6 +336,15 @@ Schema.prototype = {
 		that._validateFields(value, options, done);
 	},
 
+	/**
+	 * verify inner fields
+	 *
+	 * @private
+	 * @method
+	 * @param {*} value - [required] - value for check
+	 * @param {Object} options - [required] - validation options
+	 * @param {Function} done - [required] - done-callback
+	 */
 	_validateFields: function (value, options, done) {
 		if (!_.isObject(value)) {
 			done(Schema.ValidationError('type', 'object', this.path, value));
@@ -341,7 +372,6 @@ Schema.prototype = {
 	required: function (name, validation, nested, nestedTypeIsArray) {
 		return this.field(name, true, validation, nested, nestedTypeIsArray);
 	},
-
 
 	/**
 	 * add new optional nested schema by construct
