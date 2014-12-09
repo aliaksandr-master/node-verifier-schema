@@ -1,6 +1,7 @@
 "use strict";
 
 var _ = require('lodash');
+var async = require('async');
 
 /**
  * Create instance of Schema
@@ -224,6 +225,109 @@ Schema.prototype = {
 		return clone;
 	},
 
+	verify: function (value, options, done) {
+		if (_.isFunction(options)) {
+			done = options;
+			options = null;
+		}
+
+		options || (options = {});
+
+		var that = this;
+
+		var _done = function (err) {
+			if (err instanceof Schema.ValidationError) {
+				done(null, false, err);
+				return;
+			}
+
+			if (err) {
+				done(err, false, null);
+				return;
+			}
+
+			done(null, true, null);
+		};
+
+		if (value === undefined) {
+			if (this.isRequired) {
+				_done(Schema.ValidationError('required', null, this.path, value));
+				return;
+			}
+
+			_done();
+			return;
+		}
+
+		var validations = this.validations;
+		if (!_.isEmpty(validations)) {
+			if (options.validator) {
+				validations = options.validator(validations);
+			}
+
+			async.reduce(validations, null, function (info, validation, done) {
+				validation(value, function (err, isValid, validationError) {
+					validationError || (validationError = {});
+
+					if (err) {
+						done(err);
+						return;
+					}
+
+					if (!isValid) {
+						done(Schema.ValidationError(validationError.ruleName, validationError.ruleParams, that.path, value));
+						return;
+					}
+
+					done(null);
+				});
+			}, function (err) {
+				if (err) {
+					done(err);
+					return;
+				}
+
+				that._validationInner(value, options, _done);
+			});
+			return;
+		}
+
+		that._validationInner(value, options, _done);
+	},
+
+	_validationInner: function (value, options, done) {
+		var that = this;
+
+		if (this.isArray) {
+			if (!_.isArray(value)) {
+				done(Schema.ValidationError('type', 'array', this.path, value));
+				return;
+			}
+
+			async.reduce(value, null, function (_1, value, done) {
+				that._validateFields(value, options, done);
+			}, done);
+
+			return;
+		}
+
+		that._validateFields(value, options, done);
+	},
+
+	_validateFields: function (value, options, done) {
+		if (!_.isObject(value)) {
+			done(Schema.ValidationError('type', 'object', this.path, value));
+			return;
+		}
+
+		async.reduce(this.fields, null, function (_1, fieldSchema, done) {
+			var fieldValue = value[fieldSchema.name];
+			fieldSchema.verify(fieldValue, options, function (err, isValid, validationError) {
+				done(err || validationError || (isValid ? null : Schema.ValidationError(null, null, fieldSchema.path, fieldValue)));
+			});
+		}, done);
+	},
+
 	/**
 	 * add new required nested schema by construct
 	 *
@@ -339,6 +443,32 @@ Schema.get = function (name) {
 	}
 
 	return register[name];
+};
+
+Schema.errorMessageMap = {};
+
+Schema.ValidationError = function (ruleName, ruleParams, path, value) {
+	ruleName || (ruleName = 'unknown');
+	path || (path = []);
+	value = _.cloneDeep(value);
+
+	var result = new Error();
+
+	Object.defineProperty(result, "type", {
+		value: result.type,
+		enumerable: true,
+		writable: true,
+		configurable: true
+	});
+
+	result.ruleName = ruleName;
+	result.ruleParams = ruleParams;
+	result.value = value;
+	result.path = path;
+	result.message = Schema.errorMessageMap[ruleName] ? Schema.errorMessageMap[ruleName](ruleName, ruleParams, path, value) : 'invalid value ' + ruleName + ' in ' + path;
+	result.type = "ValidationError";
+
+	return result;
 };
 
 module.exports = Schema;
