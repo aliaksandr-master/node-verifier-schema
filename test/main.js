@@ -1,7 +1,6 @@
 "use strict";
 
 var _ = require('lodash');
-var validator = require('node-verifier');
 var Schema = require('../index');
 
 var inspect = function (value) {
@@ -28,7 +27,7 @@ var tester = function (schema, testCase, objectForValidate) {
 
 exports.schema = {
 	simple: function (test) {
-		new Schema().validate('type object').build(function (required, optional) {
+		new Schema().validate('type object').object(function (required, optional) {
 			required('fio', 'type object', function (required, optional) {
 				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
 				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
@@ -48,7 +47,7 @@ exports.schema = {
 	},
 
 	clone: function (test) {
-		var s0 = new Schema().validate('type object').build(function (required, optional) {
+		var s0 = new Schema().validate('type object').object(function (required, optional) {
 			required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
 			required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
 			optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
@@ -59,7 +58,7 @@ exports.schema = {
 	},
 
 	nestedSchema: function (test) {
-		var s0 = new Schema().build(function (required, optional) {
+		var s0 = new Schema().object(function (required, optional) {
 			required('fio', 'type object', function (required, optional) {
 				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
 				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
@@ -68,7 +67,7 @@ exports.schema = {
 		});
 		//consoleInspect(s0.schema);
 
-		var s1 = new Schema().validate('type object').build(function (required, optional) {
+		var s1 = new Schema().validate('type object').object(function (required, optional) {
 			required('age', ['type number', 'max_value 100', 'min_value 16']);
 			required('family', ['type array', 'min_length 2', {each: ['type object']}], function (required, optional) {
 				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
@@ -80,7 +79,7 @@ exports.schema = {
 		});
 		//consoleInspect(s1.schema);
 
-		s1.field('fio', false, null, s0.schema, false);
+		s1.field('fio', null, s0, false);
 
 		//consoleInspect(s1.schema);
 
@@ -89,59 +88,59 @@ exports.schema = {
 	}
 };
 
-var s1 = new Schema().build(function (required, optional) {
+var s1 = new Schema().object(function (required, optional) {
 	required('age');
 	optional('school_names');
 });
 
-exports.validate = {
-	'simple #1': tester(s1, { expect: true }, undefined),
-	'simple #2': tester(s1, { expect: false }, {}),
-	'simple #3': tester(s1, { expect: false }, []),
-	'simple #4': tester(s1, { expect: false }, null),
-	'simple #5': tester(s1, { expect: false }, 3),
-	'simple #6': tester(s1, { expect: false }, "asdasd"),
-	'simple #7': tester(s1, { expect: true }, {
+exports.validate_simple = {
+	'#1': tester(s1, { expect: false }, undefined),
+	'#2': tester(s1, { expect: false }, {}),
+	'#3': tester(s1, { expect: false }, []),
+	'#4': tester(s1, { expect: false }, null),
+	'#5': tester(s1, { expect: false }, 3),
+	'#6': tester(s1, { expect: false }, "asdasd"),
+	'#7': tester(s1, { expect: true }, {
 		'age': null
 	}),
-	'simple #8': tester(s1, { expect: false }, {
+	'#8': tester(s1, { expect: false }, {
 		'age': undefined
 	}),
-	'simple #9': tester(s1, { expect: true }, {
+	'#9': tester(s1, { expect: true }, {
 		'age': {}
 	}),
-	'simple #10': tester(s1, { expect: true }, {
+	'#10': tester(s1, { expect: true }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		}
 	}),
-	'simple #11': tester(s1, { expect: true }, {
+	'#11': tester(s1, { expect: true }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},
 		'school_names': undefined
 	}),
-	'simple #12': tester(s1, { expect: false }, {
+	'#12': tester(s1, { expect: false }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},
 		'school_names': undefined,
 		'some': 123123
 	}),
-	'simple #13': tester(s1, { expect: false }, {
+	'#13': tester(s1, { expect: false }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},
 		'some': 123123
 	}),
-	'simple #14': tester(s1, { expect: false }, {
+	'#14': tester(s1, { expect: false }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},
 		'school_names': 123123,
 		'some': 123123
 	}),
-	'simple #15': tester(s1, { expect: true }, {
+	'#15': tester(s1, { expect: true }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},

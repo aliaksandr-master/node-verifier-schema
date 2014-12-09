@@ -9,6 +9,7 @@ var async = require('async');
  * @constructors
  * @this {Schema}
  * @class Schema
+ * @param {string} [name] - register name
  * @return {Schema}
  */
 function Schema (name) {
@@ -19,30 +20,11 @@ function Schema (name) {
 	if (name != null) {
 		Schema.register(name, this);
 	}
+
+	this.isRequired = true;
 }
 
 Schema.prototype = {
-	/**
-	 * attach schema to this object
-	 *
-	 * @method
-	 * @param {Schema} schema - object for attach.
-	 * @param {String} name - field name for attach.
-	 * @throws {TypeError} If schema isn't Schema type
-	 * @throws {TypeError} If name empty or isn't String type
-	 * @return {Schema} @this
-	 */
-	attach: function (schema, name) {
-		if (!(schema instanceof Schema)) {
-			throw new TypeError('schema node must be instance of Schema');
-		}
-
-		schema.attachTo(this, name);
-
-		schema = null;
-
-		return this;
-	},
 
 	/**
 	 * attach this object to schema
@@ -56,6 +38,10 @@ Schema.prototype = {
 	 * @return {Schema} @this
 	 */
 	attachTo: function (schema, name) {
+		if (_.isString(schema)) {
+			schema = Schema.get(schema);
+		}
+
 		if (!(schema instanceof Schema)) {
 			throw new TypeError('schema node must be instance of Schema');
 		}
@@ -77,6 +63,7 @@ Schema.prototype = {
 
 	/**
 	 * @private
+	 * @method
 	 * @param {Schema} schema - attach destination object.
 	 * @param {String} name - field name for attach.
 	 * @throws {Error} If schema already has the same key name
@@ -88,6 +75,8 @@ Schema.prototype = {
 		} else if (_.contains(this.keys, name)) {
 			throw new Error('duplicate key "' + name + '" at "/' + (schema.path && schema.path.join('/')) + '"');
 		}
+
+		this.hasNested = true;
 
 		this.keys.push(name);
 
@@ -105,7 +94,7 @@ Schema.prototype = {
 	 * @param {Boolean} isRequired - flag.
 	 * @return {Schema} @this
 	 */
-	setRequired: function (isRequired) {
+	_setRequired: function (isRequired) {
 		this.isRequired = Boolean(isRequired);
 
 		return this;
@@ -115,10 +104,8 @@ Schema.prototype = {
 	 * @param {Boolean} nestedTypeIsArray - flag.
 	 * @return {Schema} @this
 	 */
-	typeArray: function (nestedTypeIsArray) {
-		if (nestedTypeIsArray) {
-			this.isArray = true;
-		}
+	_typeArray: function (nestedTypeIsArray) {
+		this.isArray = Boolean(nestedTypeIsArray);
 
 		return this;
 	},
@@ -150,53 +137,53 @@ Schema.prototype = {
 	 * set nested fields builder
 	 *
 	 * @method
-	 * @param {Function} builder - builder function, has two functions in arguments [required, options].
+	 * @param {Function|Schema} builderOrSchema - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
 	 * @return {Schema} @this
 	 */
-	build: function (builder) {
-		if (builder) {
-			if (!_.isFunction(builder)) {
-				throw new TypeError('nested builder must be function');
-			}
-
-			builder.call(this, this.required.bind(this), this.optional.bind(this));
+	object: function (builderOrSchema) {
+		if (this.fields) {
+			throw new Error('object already defined');
 		}
 
+		if (builderOrSchema instanceof Schema) {
+			return this._similar(builderOrSchema);
+		}
+
+		if (!_.isFunction(builderOrSchema)) {
+			throw new TypeError('nested builder must be function');
+		}
+
+		builderOrSchema.call(this, this.required.bind(this), this.optional.bind(this));
+
 		return this;
+	},
+
+	/**
+	 * set nested fields builder
+	 *
+	 * @method
+	 * @param {Function|Schema} builderOrSchema - builder function, has two functions in arguments [required, options].
+	 * @throws {TypeError} If nested is not a function if specified
+	 * @return {Schema} @this
+	 */
+	array: function (builder) {
+		if (_.isBoolean(builder)) {
+			return this._typeArray(builder);
+		}
+
+		return this.object(builder)._typeArray(true);
 	},
 
 	/**
 	 * add new nested schema by construct
 	 *
 	 * @method
-	 * @param {String} name - [required] - field name.
-	 * @param {Boolean} isRequired - [optional] - is required flag, default is true
-	 * @param {Array|String|Object|Function} validation - [optional] - validation options.
-	 * @param {Function|Schema} nested - [optional] - builder function, has two functions in arguments [required, options].
-	 * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
+	 * @param {String} name - field name.
 	 * @return {Schema} @this
 	 */
-	field: function (name, isRequired, validation, nested, nestedTypeIsArray) {
-		if (_.isString(nested)) {
-			nested = Schema.get(nested);
-		}
-
-		var isSchema = nested instanceof Schema;
-		var schema = (isSchema ? nested.clone() : new Schema())
-			.attachTo(this, name);
-
-		if (!isSchema) {
-			schema.build(nested);
-		}
-
-		schema
-			.validate(validation)
-			.setRequired(isRequired)
-			.typeArray(nestedTypeIsArray);
-
-		nested = null;
-		return schema;
+	field: function (name) {
+		return new Schema().attachTo(this, name);
 	},
 
 	/**
@@ -206,21 +193,13 @@ Schema.prototype = {
 	 * @return {Schema} new object (clone)
 	 */
 	clone: function () {
-		var clone = new Schema();
+		var clone = new Schema()._similar(this);
 
-		_.each(this.fields, function (fieldSchema) {
-			fieldSchema.clone().attachTo(clone, fieldSchema.name);
-		});
-
-		if (this.validations !== undefined) {
-			clone.validations = _.cloneDeep(this.validations);
-		}
-
-		if (this.isArray !== undefined) {
+		if (this.isArray != null) {
 			clone.isArray = this.isArray;
 		}
 
-		if (this.isRequired !== undefined) {
+		if (this.isRequired != null) {
 			clone.isRequired = this.isRequired;
 		}
 
@@ -228,13 +207,38 @@ Schema.prototype = {
 	},
 
 	/**
+	 * clone schema to this schema object
+	 *
+	 * @private
+	 * @method
+	 * @return {Schema} new object (clone)
+	 */
+	_similar: function (schema) {
+		var that = this;
+
+		_.each(schema.fields, function (fieldSchema) {
+			fieldSchema.clone().attachTo(that, fieldSchema.name);
+		});
+
+		if (schema.validations != null) {
+			this.validations = _.cloneDeep(schema.validations);
+		}
+
+		if (schema.isRequired != null) {
+			this.isRequired = schema.isRequired;
+		}
+
+		return this;
+	},
+
+	/**
 	 * verify value. compare schema with some object.
 	 *
 	 * @private
 	 * @method
-	 * @param {*} value - [required] - value for check.
-	 * @param {Object} options - [optional] - validation options, default is plain object.
-	 * @param {Function} done - [required] - done-callback.
+	 * @param {*} value - value for check.
+	 * @param {Object} [options] - validation options, default is plain object.
+	 * @param {Function} done - done-callback.
 	 */
 	verify: function (value, options, done) {
 		if (_.isFunction(options)) {
@@ -315,9 +319,9 @@ Schema.prototype = {
 	 *
 	 * @private
 	 * @method
-	 * @param {*} value - [required] - value for check
-	 * @param {Object} options - [required] - validation options
-	 * @param {Function} done - [required] - done-callback
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {Function} done - done-callback
 	 */
 	_validationInner: function (value, options, done) {
 		var that = this;
@@ -343,9 +347,9 @@ Schema.prototype = {
 	 *
 	 * @private
 	 * @method
-	 * @param {*} value - [required] - value for check
-	 * @param {Object} options - [required] - validation options
-	 * @param {Function} done - [required] - done-callback
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {Function} done - done-callback
 	 */
 	_validateFields: function (value, options, done) {
 		if (_.isEmpty(this.fields)) {
@@ -387,75 +391,43 @@ Schema.prototype = {
 	 * add new required nested schema by construct
 	 *
 	 * @method
-	 * @param {String} name - [required] - field name.
-	 * @param {Array|String|Object|Function} validation - [optional] - validation options.
-	 * @param {Function} nested - [optional] - builder function, has two functions in arguments [required, options].
-	 * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
+	 * @param {String} [name] - field name.
+	 * @param {*} [validation] - validation options.
 	 * @return {Schema}
 	 */
-	required: function (name, validation, nested, nestedTypeIsArray) {
-		return this.field(name, true, validation, nested, nestedTypeIsArray);
+	required: function (name, validation) {
+		if (!arguments.length) {
+			return this._setRequired(true);
+		}
+
+		return this.field(name).validate(validation);
 	},
 
 	/**
 	 * add new optional nested schema by construct
 	 *
 	 * @method
-	 * @param {String} name - [required] - field name.
-	 * @param {Array|String|Object|Function} validation - [optional] - validation options.
-	 * @param {Function} nested - [optional] - builder function, has two functions in arguments [required, options].
-	 * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
+	 * @param {String} [name] - field name.
+	 * @param {*} [validation] - validation options.
 	 * @return {Schema}
 	 */
-	optional: function (name, validation, nested, nestedTypeIsArray) {
-		return this.field(name, false, validation, nested, nestedTypeIsArray);
+	optional: function (name, validation) {
+		if (!arguments.length) {
+			return this._setRequired(false);
+		}
+
+		return this.field(name).validate(validation)._setRequired(false);
 	}
 };
 
-
-
-/**
- * Schema builder. return new Schema instance;
- *
- * @static
- * @param {Array|String|Object|Function} validation - [optional] - validation options.
- * @param {Function|Schema} nested - [optional] - builder function, has two functions in arguments [required, options].
- * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
- * @return {Schema}
- */
-Schema.build = function (validation, nested, nestedTypeIsArray) {
-	return new Schema()
-		.build(nested)
-		.validate(validation)
-		.typeArray(nestedTypeIsArray);
-};
-
-
-
-/**
- * Schema builder. return new Schema instance; register this schema
- *
- * @static
- * @param {String} name - [required] - name for register.
- * @param {Array|String|Object|Function} validation - [optional] - validation options.
- * @param {Function|Schema} nested - [optional] - builder function, has two functions in arguments [required, options].
- * @param {Boolean} nestedTypeIsArray - [optional] - set type Array of current object of Schema.
- * @return {Schema}
- */
-Schema.create = function (name, validation, nested, nestedTypeIsArray) {
-	var schema = Schema.build(validation, nested, nestedTypeIsArray);
-	return Schema.register(name, schema);
-};
-
 var register = {};
-
 
 /**
  * Schema register
  *
  * @static
- * @param {String} name - [required] - name for register.
- * @param {Schema} schema - [required] - schema for register
+ * @param {String} name - name for register.
+ * @param {Schema} schema - schema for register
  * @throws {TypeError} If invalid name type
  * @throws {TypeError} If schema name type
  * @throws {ReferenceError} If schema was already registered
@@ -482,7 +454,7 @@ Schema.register = function (name, schema) {
  * get registered schema
  *
  * @static
- * @param {String} name - [required] - name for register.
+ * @param {String} name - name for register.
  * @throws {TypeError} If invalid name type
  * @throws {ReferenceError} If schema was not registered before
  * @return {Schema}
@@ -511,10 +483,10 @@ Schema.errorMessage = function (ruleName, ruleParams, path, value) {
  * @constructors
  * @this {Schema.ValidationError}
  * @class Schema.ValidationError
- * @param {string} ruleName - [required] - rule name, that failed
- * @param {*} ruleParams - [required] - params of rule, that failed
- * @param {Array|null} path - [required] -  schema path
- * @param {*} value - [required] - value, that failed
+ * @param {string} ruleName - rule name, that failed
+ * @param {*} ruleParams - params of rule, that failed
+ * @param {Array|null} path -  schema path
+ * @param {*} value - value, that failed
  * @return {Schema.ValidationError}
  */
 Schema.ValidationError = function ValidationError (ruleName, ruleParams, path, value) {
