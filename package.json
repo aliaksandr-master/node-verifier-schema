@@ -27,8 +27,7 @@
   "homepage": "https://github.com/aliaksandr-pasynkau/node-verifier-schema",
   "dependencies": {
     "async": "~0.9.0",
-    "lodash": "~2.4.1",
-    "error": "~4.3.0"
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
     "colors": "^1.0.3",
