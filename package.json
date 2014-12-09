@@ -1,6 +1,6 @@
 {
   "name": "node-verifier-schema",
-  "version": "0.0.2",
+  "version": "0.2.0",
   "description": "verify JSON plain object schema",
   "main": "index.js",
   "directories": {
