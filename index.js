@@ -91,26 +91,6 @@ Schema.prototype = {
 	},
 
 	/**
-	 * @param {Boolean} isRequired - flag.
-	 * @return {Schema} @this
-	 */
-	_setRequired: function (isRequired) {
-		this.isRequired = Boolean(isRequired);
-
-		return this;
-	},
-
-	/**
-	 * @param {Boolean} nestedTypeIsArray - flag.
-	 * @return {Schema} @this
-	 */
-	_typeArray: function (nestedTypeIsArray) {
-		this.isArray = Boolean(nestedTypeIsArray);
-
-		return this;
-	},
-
-	/**
 	 * set validate options. can be called several times
 	 *
 	 * @method
@@ -142,7 +122,7 @@ Schema.prototype = {
 	 * @return {Schema} @this
 	 */
 	object: function (builderOrSchema) {
-		if (this.fields) {
+		if (this.hasNested) {
 			throw new Error('object already defined');
 		}
 
@@ -160,19 +140,21 @@ Schema.prototype = {
 	},
 
 	/**
-	 * set nested fields builder
+	 * set nested fields builder with type array
 	 *
 	 * @method
-	 * @param {Function|Schema} builderOrSchema - builder function, has two functions in arguments [required, options].
+	 * @param {Function|Schema|Boolean} builderOrSchema - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
 	 * @return {Schema} @this
 	 */
-	array: function (builder) {
-		if (_.isBoolean(builder)) {
-			return this._typeArray(builder);
+	array: function (builderOrSchema) {
+		if (_.isFunction(builderOrSchema) || builderOrSchema instanceof Schema) {
+			this.object(builderOrSchema);
 		}
 
-		return this.object(builder)._typeArray(true);
+		this.isArray = builderOrSchema == null ? true : Boolean(builderOrSchema);
+
+		return this;
 	},
 
 	/**
@@ -352,7 +334,7 @@ Schema.prototype = {
 	 * @param {Function} done - done-callback
 	 */
 	_validateFields: function (value, options, done) {
-		if (_.isEmpty(this.fields)) {
+		if (!this.hasNested) {
 			done();
 			return;
 		}
@@ -397,7 +379,8 @@ Schema.prototype = {
 	 */
 	required: function (name, validation) {
 		if (!arguments.length) {
-			return this._setRequired(true);
+			this.isRequired = true;
+			return this;
 		}
 
 		return this.field(name).validate(validation);
@@ -413,10 +396,13 @@ Schema.prototype = {
 	 */
 	optional: function (name, validation) {
 		if (!arguments.length) {
-			return this._setRequired(false);
+			this.isRequired = false;
+			return this;
 		}
 
-		return this.field(name).validate(validation)._setRequired(false);
+		var schema = this.field(name).validate(validation);
+		schema.isRequired = false;
+		return schema;
 	}
 };
 
