@@ -102,9 +102,7 @@ Schema.prototype = {
 	 * @return {Schema} @this
 	 */
 	setRequired: function (isRequired) {
-		if (isRequired) {
-			this.isRequired = true;
-		}
+		this.isRequired = Boolean(isRequired);
 
 		return this;
 	},
@@ -264,7 +262,7 @@ Schema.prototype = {
 
 		if (value === undefined) {
 			if (this.isRequired) {
-				_done(Schema.ValidationError('required', null, this.path, value));
+				_done(new Schema.ValidationError('required', null, this.path, value));
 				return;
 			}
 
@@ -288,7 +286,7 @@ Schema.prototype = {
 					}
 
 					if (!isValid) {
-						done(Schema.ValidationError(validationError.ruleName, validationError.ruleParams, that.path, value));
+						done(new Schema.ValidationError(validationError.ruleName, validationError.ruleParams, that.path, value));
 						return;
 					}
 
@@ -322,7 +320,7 @@ Schema.prototype = {
 
 		if (this.isArray) {
 			if (!_.isArray(value)) {
-				done(Schema.ValidationError('type', 'array', this.path, value));
+				done(new Schema.ValidationError('type', 'array', this.path, value));
 				return;
 			}
 
@@ -346,15 +344,37 @@ Schema.prototype = {
 	 * @param {Function} done - [required] - done-callback
 	 */
 	_validateFields: function (value, options, done) {
+		if (_.isEmpty(this.fields)) {
+			done();
+			return;
+		}
+
 		if (!_.isObject(value)) {
-			done(Schema.ValidationError('type', 'object', this.path, value));
+			done(new Schema.ValidationError('type', 'object', this.path, value));
+			return;
+		}
+
+		var diff = _.difference(_.keys(value), this.keys);
+		if (diff.length) {
+			done(new Schema.ValidationError('unexpected_keys', null, this.path, value));
 			return;
 		}
 
 		async.reduce(this.fields, null, function (_1, fieldSchema, done) {
 			var fieldValue = value[fieldSchema.name];
 			fieldSchema.verify(fieldValue, options, function (err, isValid, validationError) {
-				done(err || validationError || (isValid ? null : Schema.ValidationError(null, null, fieldSchema.path, fieldValue)));
+				err = err || validationError;
+				if (err) {
+					done(err);
+					return;
+				}
+
+				if (isValid == null || isValid) {
+					done();
+					return;
+				}
+
+				done(new Schema.ValidationError(null, null, fieldSchema.path, fieldValue));
 			});
 		}, done);
 	},
@@ -477,28 +497,22 @@ Schema.get = function (name) {
 
 Schema.errorMessageMap = {};
 
-Schema.ValidationError = function (ruleName, ruleParams, path, value) {
+Schema.ValidationError = function ValidationError (ruleName, ruleParams, path, value) {
 	ruleName || (ruleName = 'unknown');
 	path || (path = []);
 	value = _.cloneDeep(value);
 
-	var result = new Error();
+	var map = Schema.errorMessageMap[ruleName];
 
-	Object.defineProperty(result, "type", {
-		value: result.type,
-		enumerable: true,
-		writable: true,
-		configurable: true
-	});
-
-	result.ruleName = ruleName;
-	result.ruleParams = ruleParams;
-	result.value = value;
-	result.path = path;
-	result.message = Schema.errorMessageMap[ruleName] ? Schema.errorMessageMap[ruleName](ruleName, ruleParams, path, value) : 'invalid value ' + ruleName + ' in ' + path;
-	result.type = "ValidationError";
-
-	return result;
+	var message = map ? map(ruleName, ruleParams, path, value) : 'invalid value ' + ruleName + ' in ' + path;
+	Error.call(this, message);
+	this.type = this.name = 'ValidationError';
+	this.value = value;
+	this.path = path;
+	this.ruleName = ruleName;
+	this.ruleParams = ruleParams;
 };
+
+require('util').inherits(Schema.ValidationError, Error);
 
 module.exports = Schema;
