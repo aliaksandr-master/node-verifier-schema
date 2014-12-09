@@ -1,19 +1,24 @@
 "use strict";
 
 var _ = require('lodash');
-var verifier = require('./verifier');
-var Schema = require('./builder/Schema');
+var Schema = require('./lib/Schema');
 
-var schemaVerifier = module.exports = function (options) {
+var verifier = function (schema, options) {
+	var schemaVerifier = function (value, done) {
+		schema.verify(value, options, done);
+	};
+
+	schemaVerifier.schema = schema;
+
+	return schemaVerifier;
+};
+
+module.exports = function (options) {
 	return function (validation, nestedBuilder, nestedTypeIsArray) {
 		var schema = Schema.build(validation, nestedBuilder, nestedTypeIsArray, options);
 
-		var schemaVerifier = verifier(options, schema);
-		schemaVerifier.schema = schema;
-
-		return schemaVerifier;
+		return verifier(schema, options);
 	};
 };
 
-schemaVerifier.schemaVerifier = verifier;
-schemaVerifier.Schema = Schema;
+module.exports.Schema = Schema;
