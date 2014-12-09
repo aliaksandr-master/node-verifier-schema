@@ -1,6 +1,8 @@
 "use strict";
 
 var _ = require('lodash');
+var validator = require('node-verifier');
+var Schema = require('../index');
 
 var inspect = function (value) {
 	return '\n' + require('util').inspect(value, {depth: null, colors: true}) + '\n';
@@ -9,9 +11,6 @@ var inspect = function (value) {
 var consoleInspect = function (value) {
 	console.log.apply(console, _.map(arguments, inspect));
 };
-
-var validator = require('node-verifier');
-var schemaBuilder = require('../index');
 
 var tester = function (schema, testCase, objectForValidate) {
 
@@ -27,13 +26,9 @@ var tester = function (schema, testCase, objectForValidate) {
 	};
 };
 
-var _schemaBuilder = schemaBuilder({
-	validator: validator()
-});
-
 exports.schema = {
 	simple: function (test) {
-		_schemaBuilder('type object', function (required, optional) {
+		new Schema().validate('type object').build(function (required, optional) {
 			required('fio', 'type object', function (required, optional) {
 				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
 				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
@@ -53,18 +48,18 @@ exports.schema = {
 	},
 
 	clone: function (test) {
-		var s0 = _schemaBuilder('type object', function (required, optional) {
+		var s0 = new Schema().validate('type object').build(function (required, optional) {
 			required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
 			required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
 			optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
 		});
 
-		test.deepEqual(s0.schema, s0.schema.clone());
+		test.deepEqual(s0, s0.clone());
 		test.done();
 	},
 
 	nestedSchema: function (test) {
-		var s0 = _schemaBuilder(null, function (required, optional) {
+		var s0 = new Schema().build(function (required, optional) {
 			required('fio', 'type object', function (required, optional) {
 				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
 				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
@@ -73,7 +68,7 @@ exports.schema = {
 		});
 		//consoleInspect(s0.schema);
 
-		var s1 = _schemaBuilder('type object', function (required, optional) {
+		var s1 = new Schema().validate('type object').build(function (required, optional) {
 			required('age', ['type number', 'max_value 100', 'min_value 16']);
 			required('family', ['type array', 'min_length 2', {each: ['type object']}], function (required, optional) {
 				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
@@ -85,7 +80,7 @@ exports.schema = {
 		});
 		//consoleInspect(s1.schema);
 
-		s1.schema.field('fio', false, null, s0.schema, false);
+		s1.field('fio', false, null, s0.schema, false);
 
 		//consoleInspect(s1.schema);
 
@@ -94,7 +89,7 @@ exports.schema = {
 	}
 };
 
-var s1 = schemaBuilder.Schema().build(function (required, optional) {
+var s1 = new Schema().build(function (required, optional) {
 	required('age');
 	optional('school_names');
 });
