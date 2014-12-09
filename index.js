@@ -181,12 +181,24 @@ Schema.prototype = {
 			clone.isArray = this.isArray;
 		}
 
-		if (this.isRequired != null) {
-			clone.isRequired = this.isRequired;
-		}
-
 		return clone;
 	},
+
+	//clean: function () {
+	//	var clone = new Schema();
+	//
+	//	_.each(this.fields, function (fieldSchema) {
+	//		fieldSchema.clean().attachTo(clone, fieldSchema.name);
+	//	});
+	//
+	//	if (this.isArray != null) {
+	//		clone.isArray = this.isArray;
+	//	}
+	//
+	//	if (this.isRequired != null) {
+	//		clone.isRequired = this.isRequired;
+	//	}
+	//},
 
 	/**
 	 * clone schema to this schema object
