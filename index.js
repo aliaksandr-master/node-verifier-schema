@@ -2,8 +2,7 @@
 
 var _ = require('lodash');
 var iterate = require('./lib/iterate');
-var util = require('util');
-var extend = util.inherits.bind(util);
+var extend = require('./lib/extend');
 
 /**
  * Create instance of Schema
