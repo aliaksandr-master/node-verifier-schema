@@ -209,157 +209,7 @@ Schema.prototype = {
 			options = null;
 		}
 
-		options || (options = {});
-
-		if (!_.isFunction(done)) {
-			throw new Error('schema verify callback must be function, ' + (typeof done) + ' given');
-		}
-
-		var that = this;
-
-		var _done = function (err) {
-			if (err instanceof Schema.ValidationResultError) {
-				done(null, false, err);
-				return;
-			}
-
-			if (err) {
-				done(err, false, null);
-				return;
-			}
-
-			done(null, true, null);
-		};
-
-		if (value === undefined) {
-			if (this.isRequired) {
-				_done(new Schema.ValidationResultError('required', null, value/*, this.path*/));
-				return;
-			}
-
-			_done();
-			return;
-		}
-
-		var validations = this.validations;
-		if (!_.isEmpty(validations)) {
-			if (options.validator) {
-				validations = options.validator(validations);
-				if (_.isFunction(validations)) {
-					validations = [validations];
-				}
-
-				if (!_.isArray(validations)) {
-					done(new Error('invalid validation rule type after user-validator mapping'));
-					return;
-				}
-			}
-
-			iterate.array(validations, function (validation, index, done) {
-				validation(value, function (err, isValid, validationError) {
-					validationError || (validationError = {});
-
-					if (err) {
-						if (err instanceof Schema.ValidationError) {
-							err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value/*, that.path*/);
-						}
-						done(err);
-						return;
-					}
-
-					if (!isValid) {
-						done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value/*, that.path*/));
-						return;
-					}
-
-					done(null);
-				});
-			}, function (err) {
-				if (err) {
-					done(err);
-					return;
-				}
-
-				that._validationInner(value, options, _done);
-			});
-			return;
-		}
-
-		that._validationInner(value, options, _done);
-	},
-
-	/**
-	 * verify inner object
-	 *
-	 * @private
-	 * @method
-	 * @param {*} value - value for check
-	 * @param {Object} options - validation options
-	 * @param {Function} done - done-callback
-	 */
-	_validationInner: function (value, options, done) {
-		var that = this;
-
-		if (Boolean(this.isArray) !== _.isArray(value)) {
-			done(new Schema.ValidationResultError('type', this.isArray ? 'array' : 'object', value/*, this.path*/));
-			return;
-		}
-
-		if (this.isArray) {
-			iterate.array(value, function (value, index, done) {
-				that._validateFields(value, options, done);
-			}, done);
-
-			return;
-		}
-
-		that._validateFields(value, options, done);
-	},
-
-	/**
-	 * verify inner fields
-	 *
-	 * @private
-	 * @method
-	 * @param {*} value - value for check
-	 * @param {Object} options - validation options
-	 * @param {Function} done - done-callback
-	 */
-	_validateFields: function (value, options, done) {
-		if (!this.fields) {
-			done();
-			return;
-		}
-
-		if (!_.isObject(value)) {
-			done(new Schema.ValidationResultError('type', 'object', value/*, this.path*/));
-			return;
-		}
-
-		// check excess fields
-		var that = this;
-		if (!_.all(value, function (v, k) { return _.has(that.fields, k); })) {
-			done(new Schema.ValidationResultError('available_fields', _.keys(this.fields), value/*, this.path*/));
-			return;
-		}
-
-		iterate.object(this.fields, function (fieldSchema, name, done) {
-			var fieldValue = value[name];
-			fieldSchema.verify(fieldValue, options, function (err, isValid, validationError) {
-				err = err || validationError;
-				if (err) {
-					done(err);
-					return;
-				}
-
-				if (isValid) {
-					done();
-					return;
-				}
-
-				done(validationError);
-			});
-		}, done);
+		Schema.verify(options, this, value, done);
 	},
 
 	/**
@@ -396,6 +246,173 @@ Schema.prototype = {
 		var schema = this.field(name).validate(validation);
 		schema.isRequired = false;
 		return schema;
+	}
+};
+
+
+/**
+ * verify value. compare schema with some object.
+ *
+ * @static
+ * @method
+ * @param {Object} [options] - validation options, default is plain object.
+ * @param {Function} [options.validator] - custom validation mapper
+ * @param {Schema} schema for validate.
+ * @param {*} value - value for check.
+ * @param {Function} done - done-callback.
+ */
+Schema.verify = function (options, schema, value, done) {
+	options || (options = {});
+
+	if (!(schema instanceof Schema)) {
+		throw new TypeError('schema must be instance of Schema');
+	}
+
+	if (!_.isFunction(done)) {
+		throw new TypeError('schema verify callback must be function, ' + (typeof done) + ' given');
+	}
+
+	Schema.verifier.verifySchema(schema, value, options, function (err) {
+		if (err instanceof Schema.ValidationResultError) {
+			done(null, false, err);
+			return;
+		}
+
+		if (err) {
+			done(err, false, null);
+			return;
+		}
+
+		done(null, true, null);
+	});
+};
+
+Schema.verifier = {
+	/**
+	 * verify object
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {Function} done - done-callback
+	 */
+	verifySchema: function (schema, value, options, done) {
+		if (value === undefined) {
+			if (schema.isRequired) {
+				done(new Schema.ValidationResultError('required', null, value/*, schema.path*/));
+				return;
+			}
+
+			done();
+			return;
+		}
+
+		var validations = schema.validations;
+
+		if (_.isEmpty(validations)) {
+			Schema.verifier.validationInner(schema, value, options, done);
+			return;
+		}
+
+		if (options.validator) {
+			validations = options.validator(validations);
+			if (_.isFunction(validations)) {
+				validations = [validations];
+			}
+
+			if (!_.isArray(validations)) {
+				done(new Error('invalid validation rule type after user-validator mapping'));
+				return;
+			}
+		}
+
+		iterate.array(validations, function (validation, index, done) {
+			validation(value, function (err, isValid, validationError) {
+				validationError || (validationError = {});
+
+				if (err) {
+					if (err instanceof Schema.ValidationError) {
+						err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value/*, schema.path*/);
+					}
+					done(err);
+					return;
+				}
+
+				if (!isValid) {
+					done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value/*, schema.path*/));
+					return;
+				}
+
+				done(null);
+			});
+		}, function (err) {
+			if (err) {
+				done(err);
+				return;
+			}
+
+			Schema.verifier.validationInner(schema, value, options, done);
+		});
+	},
+
+	/**
+	 * verify inner object
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {Function} done - done-callback
+	 */
+	validationInner: function (schema, value, options, done) {
+		if (Boolean(schema.isArray) !== _.isArray(value)) {
+			done(new Schema.ValidationResultError('type', schema.isArray ? 'array' : 'object', value/*, schema.path*/));
+			return;
+		}
+
+		if (!schema.isArray) {
+			Schema.verifier.validateFields(schema, value, options, done);
+			return;
+		}
+
+		iterate.array(value, function (value, index, done) {
+			Schema.verifier.validateFields(schema, value, options, done);
+		}, done);
+	},
+
+	/**
+	 * verify inner fields
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {Function} done - done-callback
+	 */
+	validateFields: function (schema, value, options, done) {
+		if (!schema.fields) {
+			done();
+			return;
+		}
+
+		if (!_.isObject(value)) {
+			done(new Schema.ValidationResultError('type', 'object', value/*, schema.path*/));
+			return;
+		}
+
+		// check excess fields
+		if (!_.all(value, function (v, k) { return _.has(schema.fields, k); })) {
+			done(new Schema.ValidationResultError('available_fields', _.keys(schema.fields), value/*, schema.path*/));
+			return;
+		}
+
+		iterate.object(schema.fields, function (fieldSchema, name, done) {
+			Schema.verifier.verifySchema(fieldSchema, value[name], options, done);
+		}, done);
 	}
 };
 
