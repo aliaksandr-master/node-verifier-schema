@@ -123,4 +123,40 @@ module.exports = {
 
 		test.done();
 	},
+
+	'Object Schema Building: attachTo': function (test) {
+		var sh1_1 = new Schema().object(function () {
+			this.field('hello');
+			this.field('world');
+		});
+
+		var sh1_2 = new Schema('attachExampleSchema').object(function () {
+			this.field('hello');
+			this.field('world');
+		});
+
+		var sh2 = new Schema().array(function () {
+			this.field('some');
+		});
+
+
+		// ATTACH
+		sh2.clone().attachTo(sh1_1, 'myField');
+		sh2.clone().attachTo('attachExampleSchema', 'myField');
+
+
+		// EQUAL
+		var sh3 = new Schema('Hello').object(function () {
+			this.field('hello');
+			this.field('world');
+			this.field('myField').array(function () {
+				this.field('some');
+			});
+		});
+
+		test.deepEqual(sh1_1, sh3);
+		test.deepEqual(sh1_2, sh3);
+
+		test.done();
+	},
 };
