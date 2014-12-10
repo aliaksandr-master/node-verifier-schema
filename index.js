@@ -31,7 +31,7 @@ Schema.prototype = {
 	 * attach this object to schema
 	 *
 	 * @method
-	 * @param {Schema} schema - attach destination object.
+	 * @param {Schema|string} schema - attach destination object.
 	 * @param {String} name - field name for attach.
 	 * @throws {TypeError} If schema isn't Schema type
 	 * @throws {TypeError} If name empty or isn't String type
@@ -265,7 +265,7 @@ Schema.prototype = {
 
 		if (value === undefined) {
 			if (this.isRequired) {
-				_done(new Schema.ValidationResultError('required', null, this.path, value));
+				_done(new Schema.ValidationResultError('required', null, value, this.path));
 				return;
 			}
 
@@ -300,7 +300,7 @@ Schema.prototype = {
 					}
 
 					if (!isValid) {
-						done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, that.path, value));
+						done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value, that.path));
 						return;
 					}
 
@@ -333,7 +333,7 @@ Schema.prototype = {
 		var that = this;
 
 		if (Boolean(this.isArray) !== _.isArray(value)) {
-			done(new Schema.ValidationResultError('type', this.isArray ? 'array' : 'object', this.path, value));
+			done(new Schema.ValidationResultError('type', this.isArray ? 'array' : 'object', value, this.path));
 			return;
 		}
 
@@ -364,13 +364,13 @@ Schema.prototype = {
 		}
 
 		if (!_.isObject(value)) {
-			done(new Schema.ValidationResultError('type', 'object', this.path, value));
+			done(new Schema.ValidationResultError('type', 'object', value, this.path));
 			return;
 		}
 
 		var diff = _.difference(_.keys(value), this.keys);
 		if (diff.length) {
-			done(new Schema.ValidationResultError('unexpected_keys', null, this.path, value));
+			done(new Schema.ValidationResultError('available_fields', this.keys, value, this.path));
 			return;
 		}
 
@@ -505,6 +505,14 @@ Schema.errorMessage = function (ruleName, ruleParams, path, value) {
  */
 
 Schema.ValidationError = function ValidationError (ruleName, ruleParams) {
+	if (!(this instanceof Schema.ValidationError)) {
+		return new Schema.ValidationError(ruleName, ruleParams);
+	}
+
+	if (!ruleName || !_.isString(ruleName)) {
+		throw new TypeError('invalid ruleName, must be non-empty string');
+	}
+
 	ruleName || (ruleName = 'unknown');
 	this.ruleName = ruleName;
 	this.ruleParams = ruleParams;
@@ -533,8 +541,9 @@ Schema.ValidationResultError = function ValidationResultError (ruleName, rulePar
 		return new Schema.ValidationResultError(ruleName, ruleParams, value, path);
 	}
 
-	path  = _.clone(path || (path = []));
-	value = _.cloneDeep(value);
+	path       = _.clone(path || []);
+	value      = _.cloneDeep(value);
+	ruleParams = _.cloneDeep(ruleParams);
 
 	Schema.ValidationError.call(this, ruleName, ruleParams);
 	this.message = Schema.errorMessage(ruleName, ruleParams, value, path);
