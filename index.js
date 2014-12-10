@@ -48,17 +48,10 @@ Schema.prototype = {
 		}
 
 		if (!name || !_.isString(name)) {
-			throw new TypeError('invalid scheme field name must be non-empty string, "' + name + '" ' + Object.prototype.toString.call(name) + ' given');
+			throw new TypeError('invalid scheme field name, must be non-empty string, "' + name + '" ' + Object.prototype.toString.call(name) + ' given');
 		}
 
-		this.name = name;
-		this.path = (schema.path || []).concat(name);
-
-		schema._addField(this, name);
-
-		schema = null;
-
-		return this;
+		return schema._attach(this, name);
 	},
 
 
@@ -70,14 +63,15 @@ Schema.prototype = {
 	 * @throws {Error} If schema already has the same key name
 	 * @return {Schema} @this
 	 */
-	_addField: function (schema, name) {
+	_attach: function (schema, name) {
+		schema.name = name;
+		schema.path = (this.path || []).concat(name);
+
 		if (!this.keys) {
 			this.keys = [];
 		} else if (_.contains(this.keys, name)) {
 			throw new Error('duplicate key "' + name + '" at "/' + (schema.path && schema.path.join('/')) + '"');
 		}
-
-		this.hasNested = true;
 
 		this.keys.push(name);
 
@@ -86,9 +80,8 @@ Schema.prototype = {
 		}
 
 		this.fields.push(schema);
-		schema = null;
 
-		return this;
+		return schema;
 	},
 
 	/**
@@ -123,7 +116,7 @@ Schema.prototype = {
 	 * @return {Schema} @this
 	 */
 	object: function (builderOrSchema) {
-		if (this.hasNested) {
+		if (this.fields) {
 			throw new Error('object already defined');
 		}
 
@@ -184,22 +177,6 @@ Schema.prototype = {
 
 		return clone;
 	},
-
-	//clean: function () {
-	//	var clone = new Schema();
-	//
-	//	_.each(this.fields, function (fieldSchema) {
-	//		fieldSchema.clean().attachTo(clone, fieldSchema.name);
-	//	});
-	//
-	//	if (this.isArray != null) {
-	//		clone.isArray = this.isArray;
-	//	}
-	//
-	//	if (this.isRequired != null) {
-	//		clone.isRequired = this.isRequired;
-	//	}
-	//},
 
 	/**
 	 * clone schema to this schema object
@@ -358,7 +335,7 @@ Schema.prototype = {
 	 * @param {Function} done - done-callback
 	 */
 	_validateFields: function (value, options, done) {
-		if (!this.hasNested) {
+		if (!this.fields) {
 			done();
 			return;
 		}
