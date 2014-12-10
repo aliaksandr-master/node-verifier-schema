@@ -64,22 +64,13 @@ Schema.prototype = {
 	 * @return {Schema} @this
 	 */
 	_attach: function (schema, name) {
-		schema.name = name;
-		schema.path = (this.path || []).concat(name);
-
-		if (!this.keys) {
-			this.keys = [];
-		} else if (_.contains(this.keys, name)) {
-			throw new Error('duplicate key "' + name + '" at "/' + (schema.path && schema.path.join('/')) + '"');
-		}
-
-		this.keys.push(name);
-
 		if (!this.fields) {
-			this.fields = [];
+			this.fields = {};
+		} else if (_.has(this.fields, name)) {
+			throw new Error('duplicate key "' + name + '"');
 		}
 
-		this.fields.push(schema);
+		this.fields[name] = schema;
 
 		return schema;
 	},
@@ -188,8 +179,8 @@ Schema.prototype = {
 	_similar: function (schema) {
 		var that = this;
 
-		_.each(schema.fields, function (fieldSchema) {
-			fieldSchema.clone().attachTo(that, fieldSchema.name);
+		_.each(schema.fields, function (fieldSchema, name) {
+			fieldSchema.clone().attachTo(that, name);
 		});
 
 		if (schema.validations != null) {
@@ -242,7 +233,7 @@ Schema.prototype = {
 
 		if (value === undefined) {
 			if (this.isRequired) {
-				_done(new Schema.ValidationResultError('required', null, value, this.path));
+				_done(new Schema.ValidationResultError('required', null, value/*, this.path*/));
 				return;
 			}
 
@@ -264,20 +255,20 @@ Schema.prototype = {
 				}
 			}
 
-			iterate(validations, function (validation, index, done) {
+			iterate.array(validations, function (validation, index, done) {
 				validation(value, function (err, isValid, validationError) {
 					validationError || (validationError = {});
 
 					if (err) {
 						if (err instanceof Schema.ValidationError) {
-							err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value, that.path);
+							err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value/*, that.path*/);
 						}
 						done(err);
 						return;
 					}
 
 					if (!isValid) {
-						done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value, that.path));
+						done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value/*, that.path*/));
 						return;
 					}
 
@@ -310,12 +301,12 @@ Schema.prototype = {
 		var that = this;
 
 		if (Boolean(this.isArray) !== _.isArray(value)) {
-			done(new Schema.ValidationResultError('type', this.isArray ? 'array' : 'object', value, this.path));
+			done(new Schema.ValidationResultError('type', this.isArray ? 'array' : 'object', value/*, this.path*/));
 			return;
 		}
 
 		if (this.isArray) {
-			iterate(value, function (value, index, done) {
+			iterate.array(value, function (value, index, done) {
 				that._validateFields(value, options, done);
 			}, done);
 
@@ -341,18 +332,19 @@ Schema.prototype = {
 		}
 
 		if (!_.isObject(value)) {
-			done(new Schema.ValidationResultError('type', 'object', value, this.path));
+			done(new Schema.ValidationResultError('type', 'object', value/*, this.path*/));
 			return;
 		}
 
-		var diff = _.difference(_.keys(value), this.keys);
-		if (diff.length) {
-			done(new Schema.ValidationResultError('available_fields', this.keys, value, this.path));
+		// check excess fields
+		var that = this;
+		if (!_.all(value, function (v, k) { return _.has(that.fields, k); })) {
+			done(new Schema.ValidationResultError('available_fields', _.keys(this.fields), value/*, this.path*/));
 			return;
 		}
 
-		iterate(this.fields, function (fieldSchema, index, done) {
-			var fieldValue = value[fieldSchema.name];
+		iterate.object(this.fields, function (fieldSchema, name, done) {
+			var fieldValue = value[name];
 			fieldSchema.verify(fieldValue, options, function (err, isValid, validationError) {
 				err = err || validationError;
 				if (err) {
