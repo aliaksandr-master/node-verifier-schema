@@ -2,6 +2,8 @@
 
 var _ = require('lodash');
 var iterate = require('./lib/iterate');
+var util = require('util');
+var extend = util.inherits.bind(util);
 
 /**
  * Create instance of Schema
@@ -232,6 +234,7 @@ Schema.prototype = {
 	 * @method
 	 * @param {*} value - value for check.
 	 * @param {Object} [options] - validation options, default is plain object.
+	 * @param {Function} [options.validator] - custom validation mapper
 	 * @param {Function} done - done-callback.
 	 */
 	verify: function (value, options, done) {
@@ -249,7 +252,7 @@ Schema.prototype = {
 		var that = this;
 
 		var _done = function (err) {
-			if (err instanceof Schema.ValidationError) {
+			if (err instanceof Schema.ValidationResultError) {
 				done(null, false, err);
 				return;
 			}
@@ -264,7 +267,7 @@ Schema.prototype = {
 
 		if (value === undefined) {
 			if (this.isRequired) {
-				_done(new Schema.ValidationError('required', null, this.path, value));
+				_done(new Schema.ValidationResultError('required', null, this.path, value));
 				return;
 			}
 
@@ -276,6 +279,14 @@ Schema.prototype = {
 		if (!_.isEmpty(validations)) {
 			if (options.validator) {
 				validations = options.validator(validations);
+				if (_.isFunction(validations)) {
+					validations = [validations];
+				}
+
+				if (!_.isArray(validations)) {
+					done(new Error('invalid validation rule type after user-validator mapping'));
+					return;
+				}
 			}
 
 			iterate(validations, function (validation, index, done) {
@@ -283,12 +294,15 @@ Schema.prototype = {
 					validationError || (validationError = {});
 
 					if (err) {
+						if (err instanceof Schema.ValidationError) {
+							err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value, that.path);
+						}
 						done(err);
 						return;
 					}
 
 					if (!isValid) {
-						done(new Schema.ValidationError(validationError.ruleName, validationError.ruleParams, that.path, value));
+						done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, that.path, value));
 						return;
 					}
 
@@ -321,7 +335,7 @@ Schema.prototype = {
 		var that = this;
 
 		if (Boolean(this.isArray) !== _.isArray(value)) {
-			done(new Schema.ValidationError('type', this.isArray ? 'array' : 'object', this.path, value));
+			done(new Schema.ValidationResultError('type', this.isArray ? 'array' : 'object', this.path, value));
 			return;
 		}
 
@@ -352,13 +366,13 @@ Schema.prototype = {
 		}
 
 		if (!_.isObject(value)) {
-			done(new Schema.ValidationError('type', 'object', this.path, value));
+			done(new Schema.ValidationResultError('type', 'object', this.path, value));
 			return;
 		}
 
 		var diff = _.difference(_.keys(value), this.keys);
 		if (diff.length) {
-			done(new Schema.ValidationError('unexpected_keys', null, this.path, value));
+			done(new Schema.ValidationResultError('unexpected_keys', null, this.path, value));
 			return;
 		}
 
@@ -371,12 +385,12 @@ Schema.prototype = {
 					return;
 				}
 
-				if (isValid == null || isValid) {
+				if (isValid) {
 					done();
 					return;
 				}
 
-				done(new Schema.ValidationError(null, null, fieldSchema.path, fieldValue));
+				done(validationError);
 			});
 		}, done);
 	},
@@ -469,43 +483,69 @@ Schema.get = function (name) {
 	return register[name];
 };
 
-Schema.errorMessageMap = {};
+Schema.errorMessageMap = {
+	default: function (ruleName, ruleParams, path, value) {
+		return 'invalid value ' + ruleName + ' in ' + path;
+	}
+};
+
 Schema.errorMessage = function (ruleName, ruleParams, path, value) {
-	var map = Schema.errorMessageMap[ruleName];
-	return map ? map(ruleName, ruleParams, path, value) : 'invalid value ' + ruleName + ' in ' + path;
+	var map = Schema.errorMessageMap[ruleName] || Schema.errorMessageMap.default;
+	return map(ruleName, ruleParams, path, value);
 };
 
 /**
  * Create instance of Schema.ValidationError. Error object for info about miss value
  *
  * @constructors
+ * @extends Error
  * @this {Schema.ValidationError}
  * @class Schema.ValidationError
  * @param {string} ruleName - rule name, that failed
  * @param {*} ruleParams - params of rule, that failed
- * @param {Array|null} path -  schema path
- * @param {*} value - value, that failed
  * @return {Schema.ValidationError}
  */
-Schema.ValidationError = function ValidationError (ruleName, ruleParams, path, value) {
-	if (!(this instanceof ValidationError)) {
-		return new Schema.ValidationError(ruleName, ruleParams, path, value);
-	}
 
+Schema.ValidationError = function ValidationError (ruleName, ruleParams) {
 	ruleName || (ruleName = 'unknown');
-	path || (path = []);
-	value = _.cloneDeep(value);
-
-	var message = Schema.errorMessage(ruleName, ruleParams, path, value);
-	Error.call(this, message);
-	this.message = message;
-	this.type = this.name = 'ValidationError';
-	this.value = value;
-	this.path = path;
 	this.ruleName = ruleName;
 	this.ruleParams = ruleParams;
-};
+	this.type = this.name = 'ValidationError';
+	Error.call(this);
 
-require('util').inherits(Schema.ValidationError, Error);
+	return this;
+};
+extend(Schema.ValidationError, Error);
+
+/**
+ * Create instance of Schema.ValidationError. Error object for info about miss value
+ *
+ * @constructors
+ * @extends Schema.ValidationError
+ * @this {Schema.ValidationResultError}
+ * @class Schema.ValidationResultError
+ * @param {string} ruleName - rule name, that failed
+ * @param {*} ruleParams - params of rule, that failed
+ * @param {*} value - value, that failed
+ * @param {Array|null} path -  schema path
+ * @return {Schema.ValidationResultError}
+ */
+Schema.ValidationResultError = function ValidationResultError (ruleName, ruleParams, value, path) {
+	if (!(this instanceof Schema.ValidationResultError)) {
+		return new Schema.ValidationResultError(ruleName, ruleParams, value, path);
+	}
+
+	path  = _.clone(path || (path = []));
+	value = _.cloneDeep(value);
+
+	Schema.ValidationError.call(this, ruleName, ruleParams);
+	this.message = Schema.errorMessage(ruleName, ruleParams, value, path);
+	this.type = this.name = 'ValidationResultError';
+	this.value = value;
+	this.path = path;
+
+	return this;
+};
+extend(Schema.ValidationResultError, Schema.ValidationError);
 
 module.exports = Schema;
