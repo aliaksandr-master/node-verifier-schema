@@ -100,7 +100,7 @@ Schema.get('mySchema123123123'); // throw Error (schema "mySchema123123123" was 
 schema: `Schema|String` - required
 name: `Schema` - required
 
-Attach clone of schema object to 'parent' schema as field `name`
+Attach schema object to 'parent' schema as field `name`, do not forget about clone !
 
 ```js
 var sh1 = new Schema('Hello').object(function () {
@@ -111,9 +111,9 @@ var sh2 = new Schema('World').array(function () {
     this.field('some');
 });
 
-sh2.attachTo(sh1, 'myField'); // attach clone of sh2
+sh2.clone().attachTo(sh1, 'myField'); // attach clone
 // Equal
-sh2.attachTo('Hello', 'myField'); // attach clone of sh2
+sh2.clone().attachTo('Hello', 'myField'); // attach clone
 
 // result equal:
 var sh1 = new Schema('Hello').object(function () {
