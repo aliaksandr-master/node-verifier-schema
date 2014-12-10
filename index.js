@@ -229,7 +229,6 @@ Schema.prototype = {
 	/**
 	 * verify value. compare schema with some object.
 	 *
-	 * @private
 	 * @method
 	 * @param {*} value - value for check.
 	 * @param {Object} [options] - validation options, default is plain object.
