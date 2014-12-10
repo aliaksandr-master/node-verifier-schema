@@ -1,29 +1,7 @@
 "use strict";
 
-var _ = require('lodash');
 var Schema = require('../index');
-
-var inspect = function (value) {
-	return '\n' + require('util').inspect(value, {depth: null, colors: true}) + '\n';
-};
-
-var consoleInspect = function (value) {
-	console.log.apply(console, _.map(arguments, inspect));
-};
-
-var tester = function (schema, testCase, objectForValidate) {
-
-	return function (test) {
-		schema.verify(objectForValidate, function (err, isValid, validationError) {
-			if (err) {
-				console.log('unexpected error', inspect(err));
-			}
-
-			test.equal(isValid, testCase.expect, 'invalid result ' + inspect(err) + inspect(isValid) + inspect(validationError));
-			test.done(err);
-		});
-	};
-};
+var tester = require('./lib/tester');
 
 exports.schema = {
 	simple: function (test) {
@@ -146,90 +124,4 @@ exports['validate object'] = {
 		},
 		'school_names': 123123
 	})
-};
-
-var s2 = new Schema().array(function (required, optional) {
-	required('age');
-	optional('school_names');
-});
-
-exports['validate array'] = {
-	'#1': tester(s2, { expect: false }, undefined),
-	'#2': tester(s2, { expect: false }, {}),
-	'#3': tester(s2, { expect: true }, []),
-	'#4': tester(s2, { expect: false }, null),
-	'#5': tester(s2, { expect: false }, 3),
-	'#6': tester(s2, { expect: false }, "asdasd"),
-	'#7': tester(s2, { expect: false }, {
-		'age': null
-	}),
-	'#8': tester(s2, { expect: false }, {
-		'age': null,
-		'school_names': undefined
-	}),
-	'#9': tester(s2, { expect: false }, {
-		'age': null,
-		'school_names': null,
-		'some': 123123
-	}),
-	'#10': tester(s2, { expect: true }, [
-		{
-			'age': null
-		}
-	]),
-	'#11': tester(s2, { expect: true }, [
-		{
-			'age': null,
-			'school_names': undefined
-		}
-	]),
-	'#12': tester(s2, { expect: false }, [
-		{
-			'age': null,
-			'school_names': null,
-			'some': 123123
-		}
-	]),
-	'#13': tester(s2, { expect: true }, [
-		{
-			'age': null,
-			'school_names': null
-		},
-		{
-			'age': null,
-			'school_names': null
-		}
-	]),
-	'#14': tester(s2, { expect: true }, [
-		{
-			'age': null,
-			'school_names': null
-		},
-		{
-			'age': null
-		}
-	]),
-	'#15': tester(s2, { expect: true }, [
-		{
-			'age': null
-		},
-		{
-			'age': null,
-			'school_names': null
-		}
-	]),
-	'#16': tester(s2, { expect: false }, [
-		{
-			'school_names': null
-		},
-		{
-			'age': null,
-			'school_names': null
-		}
-	]),
-	'#17': tester(s2, { expect: false }, [
-		{},
-		{}
-	]),
-	'#18': tester(s2, { expect: false }, [ 1, 2, 3 ])
 };
