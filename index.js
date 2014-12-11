@@ -31,8 +31,8 @@ Schema.prototype = {
 	 * attach this object to schema
 	 *
 	 * @method
-	 * @param {Schema|string} schema - attach destination object.
-	 * @param {String} name - field name for attach.
+	 * @param {!Schema|string} schema - attach destination object.
+	 * @param {!String} name - field name for attach.
 	 * @throws {TypeError} If schema isn't Schema type
 	 * @throws {TypeError} If name empty or isn't String type
 	 * @throws {Error} If schema already has the same key name
@@ -58,8 +58,8 @@ Schema.prototype = {
 	/**
 	 * @private
 	 * @method
-	 * @param {Schema} schema - attach destination object.
-	 * @param {String} name - field name for attach.
+	 * @param {!Schema} schema - attach destination object.
+	 * @param {!String} name - field name for attach.
 	 * @throws {Error} If schema already has the same key name
 	 * @return {Schema} @this
 	 */
@@ -79,7 +79,7 @@ Schema.prototype = {
 	 * set validate options. can be called several times
 	 *
 	 * @method
-	 * @param {Array|Object|String|Function} validation - validation options.
+	 * @param {!*} validation - validation options.
 	 * @return {Schema} @this
 	 */
 	validate: function (validation) {
@@ -102,7 +102,7 @@ Schema.prototype = {
 	 * set nested fields builder
 	 *
 	 * @method
-	 * @param {Function|Schema} builderOrSchema - builder function, has two functions in arguments [required, options].
+	 * @param {!Function|Schema} builderOrSchema - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
 	 * @return {Schema} @this
 	 */
@@ -128,7 +128,7 @@ Schema.prototype = {
 	 * set nested fields builder with type array
 	 *
 	 * @method
-	 * @param {Function|Schema|Boolean} builderOrSchema - builder function, has two functions in arguments [required, options].
+	 * @param {?Function|Schema|Boolean} [builderOrSchema] - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
 	 * @return {Schema} @this
 	 */
@@ -146,8 +146,8 @@ Schema.prototype = {
 	 * add new nested schema by construct
 	 *
 	 * @method
-	 * @param {String} name - field name.
-	 * @return {Schema} @this
+	 * @param {!String} name - field name.
+	 * @return {Schema}
 	 */
 	field: function (name) {
 		return new Schema().attachTo(this, name);
@@ -199,10 +199,10 @@ Schema.prototype = {
 	 *
 	 * @method
 	 * @param {*} value - value for check.
-	 * @param {Object} [options] - validation options, default is plain object.
-	 * @param {Function} [options.validator] - custom validation mapper
-	 * @param {Function} done - done-callback.
-	 */
+	 * @param {?Object} [options] - validation options, default is plain object.
+	 * @param {?Function} [options.validator] - custom validation mapper
+	 * @param {verifyCallback} done - done-callback.
+	 * */
 	verify: function (value, options, done) {
 		if (_.isFunction(options)) {
 			done = options;
@@ -216,12 +216,12 @@ Schema.prototype = {
 	 * add new required nested schema by construct
 	 *
 	 * @method
-	 * @param {String} [name] - field name.
-	 * @param {*} [validation] - validation options.
+	 * @param {?String} [name] - field name.
+	 * @param {?*} [validation] - validation options.
 	 * @return {Schema}
 	 */
 	required: function (name, validation) {
-		if (!arguments.length) {
+		if (!arguments.length || (name == null && validation == null)) {
 			this.isRequired = true;
 			return this;
 		}
@@ -233,12 +233,12 @@ Schema.prototype = {
 	 * add new optional nested schema by construct
 	 *
 	 * @method
-	 * @param {String} [name] - field name.
-	 * @param {*} [validation] - validation options.
+	 * @param {?String} [name] - field name.
+	 * @param {?*} [validation] - validation options.
 	 * @return {Schema}
 	 */
 	optional: function (name, validation) {
-		if (!arguments.length) {
+		if (!arguments.length || (name == null && validation == null)) {
 			this.isRequired = false;
 			return this;
 		}
@@ -251,6 +251,18 @@ Schema.prototype = {
 
 
 /**
+ * @callback verifyCallback
+ * @param {?Error} error
+ * @param {Boolean} isValid
+ * @param {?Schema.ValidationResultError} validationError
+ * */
+
+/**
+ * @callback verifierDone
+ * @param {?Error|Boolean|Schema.ValidationError|Schema.ValidationResultError} error - for interrupt of validation stream (plain true), or value validation error, or Error of logic
+ * */
+
+/**
  * verify value. compare schema with some object.
  *
  * @static
@@ -259,7 +271,7 @@ Schema.prototype = {
  * @param {Function} [options.validator] - custom validation mapper
  * @param {Schema} schema for validate.
  * @param {*} value - value for check.
- * @param {Function} done - done-callback.
+ * @param {verifyCallback} done - done-callback.
  */
 Schema.verify = function (options, schema, value, done) {
 	options || (options = {});
@@ -273,6 +285,8 @@ Schema.verify = function (options, schema, value, done) {
 	}
 
 	Schema.verifier.verifySchema(schema, value, options, function (err) {
+		err = err === true ? null : err;
+
 		if (err instanceof Schema.ValidationResultError) {
 			done(null, false, err);
 			return;
@@ -296,23 +310,74 @@ Schema.verifier = {
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
 	 * @param {Object} options - validation options
-	 * @param {Function} done - done-callback
+	 * @param {verifierDone} done - done-callback
 	 */
 	verifySchema: function (schema, value, options, done) {
-		if (value === undefined) {
-			if (schema.isRequired) {
-				done(new Schema.ValidationResultError('required', null, value/*, schema.path*/));
-				return;
-			}
+		var that = this;
 
+		iterate.array([
+			this.checkRequired,
+			this.checkIsArray,
+			this.checkValidations,
+			this.checkObject
+		], function (method, _2, done) {
+			method.call(that, schema, value, options, done);
+		}, done);
+	},
+
+	/**
+	 * check isRequired flag with value
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {verifierDone} done - done-callback
+	 */
+	checkRequired: function (schema, value, options, done) {
+		if (value !== undefined) {
 			done();
 			return;
 		}
 
-		var validations = schema.validations;
+		if (schema.isRequired) {
+			done(new Schema.ValidationResultError('required', null, value/*, schema.path*/));
+			return;
+		}
 
+		done(true);
+	},
+
+
+	/**
+	 * check self validation of value
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {verifierDone} done - done-callback
+	 */
+	checkValidations: function (schema, value, options, done) {
+		this.validationCall(schema, schema.validations, value, options, done);
+	},
+
+	/**
+	 * check validation of value
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema
+	 * @param {?Array} validations.
+	 * @param {*} value
+	 * @param {Object} options
+	 * @param {verifierDone} done - done-callback
+	 */
+	validationCall: function (schema, validations, value, options, done) {
 		if (_.isEmpty(validations)) {
-			Schema.verifier.validationInner(schema, value, options, done);
+			done();
 			return;
 		}
 
@@ -347,14 +412,7 @@ Schema.verifier = {
 
 				done(null);
 			});
-		}, function (err) {
-			if (err) {
-				done(err);
-				return;
-			}
-
-			Schema.verifier.validationInner(schema, value, options, done);
-		});
+		}, done);
 	},
 
 	/**
@@ -365,22 +423,38 @@ Schema.verifier = {
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
 	 * @param {Object} options - validation options
-	 * @param {Function} done - done-callback
+	 * @param {verifierDone} done - done-callback
 	 */
-	validationInner: function (schema, value, options, done) {
-		if (Boolean(schema.isArray) !== _.isArray(value)) {
-			done(new Schema.ValidationResultError('type', schema.isArray ? 'array' : 'object', value/*, schema.path*/));
-			return;
-		}
+	checkObject: function (schema, value, options, done) {
+		var that = this;
 
 		if (!schema.isArray) {
-			Schema.verifier.validateFields(schema, value, options, done);
+			this.validateFields(schema, value, options, done);
 			return;
 		}
 
 		iterate.array(value, function (value, index, done) {
-			Schema.verifier.validateFields(schema, value, options, done);
+			that.validateFields(schema, value, options, done);
 		}, done);
+	},
+
+	/**
+	 * check is array flag
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {verifierDone} done - done-callback
+	 */
+	checkIsArray: function (schema, value, options, done) {
+		if (Boolean(schema.isArray) === _.isArray(value)) {
+			done();
+			return;
+		}
+
+		done(new Schema.ValidationResultError('type', schema.isArray ? 'array' : 'object', value/*, schema.path*/));
 	},
 
 	/**
@@ -391,28 +465,81 @@ Schema.verifier = {
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
 	 * @param {Object} options - validation options
-	 * @param {Function} done - done-callback
+	 * @param {verifierDone} done - done-callback
 	 */
 	validateFields: function (schema, value, options, done) {
+		var that = this;
+		iterate.array([
+			this.checkFieldsExists,
+			this.checkExcessFields,
+			this.checkNestedFields
+		], function (method, _2, done) {
+			method.call(that, schema, value, options, done);
+		}, done);
+	},
+
+	/**
+	 * check nested fields
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {verifierDone} done - done-callback
+	 */
+	checkNestedFields: function (schema, value, options, done) {
+		var that = this;
+		iterate.object(schema.fields, function (fieldSchema, name, done) {
+			that.verifySchema(fieldSchema, value[name], options, done);
+		}, done);
+	},
+
+	/**
+	 * check exists of fields and correct data type
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {verifierDone} done - done-callback
+	 */
+	checkFieldsExists: function (schema, value, options, done) {
 		if (!schema.fields) {
+			done(true);
+			return;
+		}
+
+		if (_.isObject(value)) {
 			done();
 			return;
 		}
 
-		if (!_.isObject(value)) {
-			done(new Schema.ValidationResultError('type', 'object', value/*, schema.path*/));
+		done(new Schema.ValidationResultError('type', 'object', value/*, schema.path*/));
+	},
+
+	/**
+	 * find the excess fields, that not defined
+	 *
+	 * @private
+	 * @method
+	 * @param {Schema} schema for validate.
+	 * @param {*} value - value for check
+	 * @param {Object} options - validation options
+	 * @param {verifierDone} done - done-callback
+	 */
+	checkExcessFields: function (schema, value, options, done) {
+		var hasExcessFields = _.any(value, function (v, k) {
+			return !_.has(schema.fields, k);
+		});
+
+		if (!hasExcessFields) {
+			done();
 			return;
 		}
 
-		// check excess fields
-		if (!_.all(value, function (v, k) { return _.has(schema.fields, k); })) {
-			done(new Schema.ValidationResultError('available_fields', _.keys(schema.fields), value/*, schema.path*/));
-			return;
-		}
-
-		iterate.object(schema.fields, function (fieldSchema, name, done) {
-			Schema.verifier.verifySchema(fieldSchema, value[name], options, done);
-		}, done);
+		done(new Schema.ValidationResultError('available_fields', _.keys(schema.fields), value/*, schema.path*/));
 	}
 };
 
