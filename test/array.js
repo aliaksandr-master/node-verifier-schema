@@ -4,12 +4,20 @@ var Schema = require('../index');
 var tester = require('./lib/tester');
 
 
+var s1 = new Schema().array();
+
+//exports['validate value-array'] = {
+//	'#1': tester(s1, { expected: true }, []),
+//	//'#2': tester(s1, { expected: false }, undefined)
+//};
+
+
 var s2 = new Schema().array(function (required, optional) {
 	required('age');
 	optional('school_names');
 });
 
-exports['validate array'] = {
+exports['validate object-array'] = {
 	'#1': tester(s2, { expect: false }, undefined),
 	'#2': tester(s2, { expect: false }, {}),
 	'#3': tester(s2, { expect: true }, []),
