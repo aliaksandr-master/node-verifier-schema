@@ -269,13 +269,22 @@ create absolute clone of schema
 value: `Mixed`
 options: `Object` - optional
 callback: `Function`
+
+Runtime validation of value. compare with schema and inner validations
+
+*options.validator(validations, options)* - function, that prepare specified validations. must return `function(value, doneCallback)` or array of functions
+options: `Object` - options
+validations: `Array` - array of validations
+
 ```js
 sh1.verify(value, function (err, isValid, validationError) {
+    // some code
 });
 ```
 err: `Error` js error
 isValid: `Boolean` result of validation
 validationError: `Null|Schema.ValidationResultError` object of
+see "schema::validate".
 
 
 #### Schema::required( [ name, [ validate ] ] )
@@ -285,7 +294,6 @@ validate: `Mixed` - optional
 Create required field
 If called without arguments - add required flag
 ```js
-
 var sc1 = Schema();
 sc1.field('some');
 // eq
@@ -299,7 +307,6 @@ validate: `Mixed` - optional
 Create optional field
 If called without arguments - remove required flag
 ```js
-
 var sc1 = Schema();
 sc1.field('some').optional();
 // eq

@@ -191,6 +191,31 @@ exports['Object Schema Building: object'] = {
 	}
 };
 
+exports['Object Schema Building: required and optional'] = {
+	optional: function (test) {
+		var sc1 = new Schema();
+		sc1.field('some').optional();
+
+		var sc2 = new Schema();
+		sc2.optional('some');
+
+		test.deepEqual(sc2, sc1);
+
+		test.done();
+	},
+	required: function (test) {
+		var sc1 = new Schema();
+		sc1.field('some');
+
+		var sc2 = new Schema();
+		sc2.required('some');
+
+		test.deepEqual(sc2, sc1);
+
+		test.done();
+	}
+};
+
 exports['Object Schema Building: validate'] = {
 	'custom validator': function (test) {
 		var sh1 = new Schema();
