@@ -1,3 +1,6 @@
+[![Dependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema.svg?style=flat)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema)
+[![devDependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema/dev-status.svg?style=flat)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schemainfo=devDependencies)
+
 ## Destination:
 1. validate nested fields.
 2. compare schema with value
