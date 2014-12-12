@@ -146,27 +146,27 @@ sh1.validate(function (value, done) {
     done(new Schema.ValidationError('type', 'string'));
 });
 
-sh1.verify(undefined, function (err, isValid, validationError) {
-    // ... some code
+sh1.verify(value, { validator: myValidator }, function (err, isValid, validationError) {
+    console.log(err); // null
+    console.log(isValida); // true
+    console.log(validationError); // null
 });
 
 // example with custom validation mapper (validator)
-sh2 = sh1.clone();
-sh2.validate([1, 2, 3]);
-var value = 123;
+var validate = [1, 2, 3];
+var sh2 = sh1.clone().validate([validate]);
 
 var myValidator = function (validationArray) {
-    var newArrayOfValidations = _.map(validationArray, function (validation) {
-        return ;
-    });
-    return [function (value, done) {
-       async.reduce(validationArray, null, function (_1, validation, done) {
+    return function (value, done) {
+        async.reduce(validationArray, null, function (_1, validation, done) {
             if (_.isFunction(validation)) {
                 validation(value, done);
                 return;
             }
+
             if (_.isArray(validation)) {
                 if (_.contains(validation, value)) {
+                    console.log(validation, value);
                     done();
                     return;
                 }
@@ -174,12 +174,18 @@ var myValidator = function (validationArray) {
                 done(Schema.ValidationError('contains', validation));
             }
             done(new Error('invalid type of validation rule'));
-       }, done);
-    }];
+        }, done);
+    };
 };
 
-sh2.verify(value, { validator: myValidator }, function (err, isValid, validationError) {
-    // ... some code
+var value = "123";
+sh2.verify(value, { validator: myValidator }, function (err2, isValid, validationError) {
+    console.log(err); // null
+    console.log(isValida); // false
+    console.log(validationError); // [object Object]
+    console.log(validationError.ruleName); // 'contains'
+    console.log(validationError.ruleParams); // [1, 2, 3]
+    console.log(validationError.value); // '123'
 });
 ```
 
