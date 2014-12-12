@@ -1,5 +1,7 @@
-[![Dependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema.svg?style=flat)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema)
-[![devDependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema/dev-status.svg?style=flat)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema#info=devDependencies)
+[![npm](http://img.shields.io/npm/v/node-verifier-schema.svg?style=flat-square)](https://www.npmjs.com/package/node-verifier-schema)
+[![npm](http://img.shields.io/npm/l/node-verifier-schema.svg?style=flat-square)](http://opensource.org/licenses/MIT)
+[![Dependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema.svg?style=flat-square)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema)
+[![devDependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema/dev-status.svg?style=flat-square)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema#info=devDependencies)
 
 ## Destination:
 1. validate nested fields.
