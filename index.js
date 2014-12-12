@@ -104,13 +104,17 @@ Schema.prototype = {
 	 * set nested fields builder
 	 *
 	 * @method
-	 * @param {!Function|Schema} builderOrSchema - builder function, has two functions in arguments [required, options].
+	 * @param {!Function|Schema|String} builderOrSchema - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
 	 * @return {Schema} @this
 	 */
 	object: function (builderOrSchema) {
 		if (this.fields) {
 			throw new Error('object already defined');
+		}
+
+		if (_.isString(builderOrSchema)) {
+			builderOrSchema = Schema.get(builderOrSchema);
 		}
 
 		if (builderOrSchema instanceof Schema) {

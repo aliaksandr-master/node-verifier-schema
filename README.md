@@ -193,34 +193,42 @@ sh2.verify(value, { validator: myValidator }, function (err2, isValid, validatio
 nested: `Schema|Function|String`
 
 If `nested` is instance of `Schema` or `String` - all inside fields became own schema (cloning).
+If `nested` is `Function` - You can build inner fields bu function
 If you call this method call several times - you give an Error.
 ```js
-var sc1 = Schema('hello');
+var sh1 = new Schema().object(function (r, o) {
+    r('my1');
+    o('world1');
+});
+
+var sh4 = new Schema().object(function (r, o) {
+    this.required('my2');
+    this.optional('world2');
+});
+
+var sc1 = new Schema('hello2').object(sh4);
 sc1.field('some1');
 sc1.field('some2');
 
-var sc2 = Schema();
-sc1.object(sh1); // add sh1
-sc1.object(sh4); // error
+var sc2 = new Schema();
+sc2.object(sc1); // add sh1
 
-var sc3 = Schema();
-sc3.object('hello'); // add sc1
-```
+var sc3 = new Schema();
+sc3.object('hello2'); // add sc1
+sc3.attachTo(sh1, 'inner');
 
-If `nested` is `Function` - You can build inner fields bu function
-```js
-
-var sc1 = Schema();
-sc1.object(function (req, opt) {
-    req('someRequiredField1', 'someValidation');
-    opt('someOptionalField2', 'someValidation')
-    this.required('someRequiredField3');
-    this.optional('someOptionalField4').object(sc2);
-    this.field('someRequiredField5').object(function (req, opt) {
-        // ...
+var testSc = new Schema().object(function (r, o) {
+    r('my1');
+    o('world1');
+    r('inner').object(function (r, o) {
+        r('my2');
+        o('world2');
+        r('some1');
+        r('some2');
     });
 });
 
+_.isEqual(testSc, sh1); // true
 ```
 
 #### Schema::array( [ nested ] )

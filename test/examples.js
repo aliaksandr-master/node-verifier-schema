@@ -152,6 +152,45 @@ exports['Object Schema Building: attachTo'] = {
 	}
 };
 
+exports['Object Schema Building: object'] = {
+	'typical': function (test) {
+		var sh1 = new Schema().object(function (r, o) {
+			r('my1');
+			o('world1');
+		});
+
+		var sh4 = new Schema().object(function (r, o) {
+			r('my2');
+			o('world2');
+		});
+
+		var sc1 = new Schema('hello2').object(sh4);
+		sc1.field('some1');
+		sc1.field('some2');
+
+		var sc2 = new Schema();
+		sc2.object(sc1); // add sh1
+
+		var sc3 = new Schema();
+		sc3.object('hello2'); // add sc1
+		sc3.attachTo(sh1, 'inner');
+
+		var testSc = new Schema().object(function (r, o) {
+			r('my1');
+			o('world1');
+			r('inner').object(function (r, o) {
+				r('my2');
+				o('world2');
+				r('some1');
+				r('some2');
+			});
+		});
+
+		test.deepEqual(sh1, testSc);
+		test.done();
+	}
+};
+
 exports['Object Schema Building: validate'] = {
 	'custom validator': function (test) {
 		var sh1 = new Schema();
