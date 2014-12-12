@@ -1,0 +1,26 @@
+---
+>:
+    - type: object
+fio?:
+    >:
+        - type: object
+age[]:
+    >:
+        - type: number
+        - max_value: 100
+        - min_value: 16
+family:
+    >:
+        - type array
+        - min_length: 2
+        - each:
+            - type: object
+school_names:
+    >:
+        - type: array
+        - min_length: 2
+        - not: empty
+        - each:
+            - type: string
+            - min_length: 3
+            - max_length: 20
