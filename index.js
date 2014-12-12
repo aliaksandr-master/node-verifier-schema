@@ -79,21 +79,23 @@ Schema.prototype = {
 	 * set validate options. can be called several times
 	 *
 	 * @method
-	 * @param {!*} validation - validation options.
+	 * @param {!*} validations - validation options.
 	 * @return {Schema} @this
 	 */
-	validate: function (validation) {
-		if (validation) {
-			if (!this.validations) {
-				this.validations = [];
-			}
-
-			if (!_.isArray(validation)) {
-				this.validations.push(validation);
-			} else {
-				this.validations = this.validations.concat(validation);
-			}
+	validate: function (validations) {
+		if (!validations) {
+			return this;
 		}
+
+		if (!this.validations) {
+			this.validations = [];
+		}
+
+		var that = this;
+		_.isArray(validations) || (validations = [validations]);
+		_.each(validations, function (validation) {
+			that.validations.push(validation);
+		});
 
 		return this;
 	},
@@ -342,7 +344,7 @@ Schema.verifier = {
 		}
 
 		if (schema.isRequired) {
-			done(new Schema.ValidationResultError('required', null, value/*, schema.path*/));
+			done(new Schema.ValidationResultError('required', true, value/*, schema.path*/));
 			return;
 		}
 
@@ -395,8 +397,6 @@ Schema.verifier = {
 
 		iterate.array(validations, function (validation, index, done) {
 			validation(value, function (err, isValid, validationError) {
-				validationError || (validationError = {});
-
 				if (err) {
 					if (err instanceof Schema.ValidationError) {
 						err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value/*, schema.path*/);
@@ -405,12 +405,13 @@ Schema.verifier = {
 					return;
 				}
 
-				if (!isValid) {
+				if (isValid != null && !isValid) {
+					validationError || (validationError = {});
 					done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value/*, schema.path*/));
 					return;
 				}
 
-				done(null);
+				done();
 			});
 		}, done);
 	},
