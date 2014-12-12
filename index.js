@@ -206,16 +206,18 @@ Schema.prototype = {
 	 * @method
 	 * @param {*} value - value for check.
 	 * @param {?Object} [options] - validation options, default is plain object.
-	 * @param {?Function} [options.validator] - custom validation mapper
+	 * @param {?validator} [options.validator] - custom validation mapper
 	 * @param {verifyCallback} done - done-callback.
 	 * */
 	verify: function (value, options, done) {
 		if (_.isFunction(options)) {
+			var opt = done;
 			done = options;
-			options = null;
+			options = opt;
+			opt = null;
 		}
 
-		Schema.verify(options, this, value, done);
+		Schema.verify(this, value, done, options);
 	},
 
 	/**
@@ -269,17 +271,37 @@ Schema.prototype = {
  * */
 
 /**
+ * @callback validator
+ * @param {array} validations - validations of this schema
+ * @return {validation}
+ * */
+
+/**
+ * @callback validation
+ * @param {*}
+ * @param {Object} options
+ * @param {userValidationDone}
+ * */
+
+/**
+ * @callback userValidationDone
+ * @param {?Error|Schema.ValidationError|Boolean} err
+ * @param {?Boolean} isValid=true
+ * @param {?Schema.ValidationError}
+ * */
+
+/**
  * verify value. compare schema with some object.
  *
  * @static
  * @method
- * @param {Object} [options] - validation options, default is plain object.
- * @param {Function} [options.validator] - custom validation mapper
- * @param {Schema} schema for validate.
+ * @param {!Schema} schema for validate.
  * @param {*} value - value for check.
- * @param {verifyCallback} done - done-callback.
+ * @param {!verifyCallback} done - done-callback.
+ * @param {?Object} [options] - validation options, default is plain object.
+ * @param {validator} [options.validator] - custom validation mapper
  */
-Schema.verify = function (options, schema, value, done) {
+Schema.verify = function (schema, value, done, options) {
 	options || (options = {});
 
 	if (!(schema instanceof Schema)) {
@@ -388,7 +410,7 @@ Schema.verifier = {
 		}
 
 		if (options.validator) {
-			validations = options.validator(validations);
+			validations = options.validator(validations, options);
 			if (_.isFunction(validations)) {
 				validations = [validations];
 			}
@@ -400,7 +422,7 @@ Schema.verifier = {
 		}
 
 		iterate.array(validations, function (validation, index, done) {
-			validation(value, function (err, isValid, validationError) {
+ 			validation(value, function (err, isValid, validationError) {
 				if (err) {
 					if (err instanceof Schema.ValidationError) {
 						err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value/*, schema.path*/);
@@ -409,13 +431,13 @@ Schema.verifier = {
 					return;
 				}
 
-				if (isValid != null && !isValid) {
-					validationError || (validationError = {});
-					done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value/*, schema.path*/));
+				if (isValid == null || isValid) {
+					done();
 					return;
 				}
 
-				done();
+				validationError || (validationError = {});
+				done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value/*, schema.path*/));
 			});
 		}, done);
 	},
