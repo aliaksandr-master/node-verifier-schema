@@ -152,6 +152,37 @@ exports['Object Schema Building: attachTo'] = {
 	}
 };
 
+exports['Object Schema Building: array'] = {
+	'custom validation': function (test) {
+		var sch1 = new Schema().array().validate(function(value, done){
+			var itemIndex;
+			var isValid = _.all(value, function (item, index) {
+				// some validation, for example: type = string
+				itemIndex = index;
+				return _.isString(item);
+			});
+
+			if (!isValid) {
+				done(Schema.ValidationError('type', 'string', itemIndex));
+				return;
+			}
+
+			done();
+		});
+
+		sch1.verify(["1" ,"2" ,"3", 4], function (err, isValid, validationError) {
+			validationError || (validationError = {});
+			test.equal(err, null);
+			test.ok(!isValid);
+			test.strictEqual(validationError.ruleName, 'type');
+			test.strictEqual(validationError.ruleParams, 'string');
+			test.strictEqual(validationError.arrayItemIndex, 3);
+			test.deepEqual(validationError.value, ["1" ,"2" ,"3", 4]);
+			test.done();
+		});
+	}
+};
+
 exports['Object Schema Building: object'] = {
 	'typical': function (test) {
 		var sh1 = new Schema().object(function (r, o) {

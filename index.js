@@ -390,7 +390,7 @@ Schema.verifier = {
 		}
 
 		if (schema.isRequired) {
-			done(new Schema.ValidationResultError('required', true, value/*, schema.path*/));
+			done(new Schema.ValidationResultError('required', true, value, null/*, schema.path*/));
 			return;
 		}
 
@@ -443,7 +443,7 @@ Schema.verifier = {
  			validation(value, function (err, isValid, validationError) {
 				if (err) {
 					if (err instanceof Schema.ValidationError) {
-						err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value/*, schema.path*/);
+						err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value, err.arrayItemIndex/*, schema.path*/);
 					}
 					done(err);
 					return;
@@ -455,7 +455,7 @@ Schema.verifier = {
 				}
 
 				validationError || (validationError = {});
-				done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value/*, schema.path*/));
+				done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value, null/*, schema.path*/));
 			});
 		}, done);
 	},
@@ -497,7 +497,7 @@ Schema.verifier = {
 			return;
 		}
 
-		done(new Schema.ValidationResultError('type', schema.isArray ? 'array' : 'object', value/*, schema.path*/));
+		done(new Schema.ValidationResultError('type', schema.isArray ? 'array' : 'object', value, null/*, schema.path*/));
 	},
 
 	/**
@@ -556,7 +556,7 @@ Schema.verifier = {
 			return;
 		}
 
-		done(new Schema.ValidationResultError('type', 'object', value/*, schema.path*/));
+		done(new Schema.ValidationResultError('type', 'object', value, null/*, schema.path*/));
 	},
 
 	/**
@@ -578,7 +578,7 @@ Schema.verifier = {
 			return;
 		}
 
-		done(new Schema.ValidationResultError('available_fields', _.keys(schema.fields), value/*, schema.path*/));
+		done(new Schema.ValidationResultError('available_fields', _.keys(schema.fields), value, null/*, schema.path*/));
 	}
 };
 
@@ -644,15 +644,17 @@ Schema.get = function (name, strict) {
  * @class Schema.ValidationError
  * @param {string} ruleName - rule name, that failed
  * @param {*} ruleParams - params of rule, that failed
+ * @param {?Number} [arrayItemIndex=null] - index of array, default null
  * @property {String} type
  * @property {String} name
+ * @property {?Number} arrayItemIndex
  * @property {String} ruleName
  * @property {*} ruleParams
  * @returns {Schema.ValidationError}
  */
-Schema.ValidationError = function ValidationError (ruleName, ruleParams) {
+Schema.ValidationError = function ValidationError (ruleName, ruleParams, arrayItemIndex) {
 	if (!(this instanceof Schema.ValidationError)) {
-		return new Schema.ValidationError(ruleName, ruleParams);
+		return new Schema.ValidationError(ruleName, ruleParams, arrayItemIndex);
 	}
 
 	if (!ruleName || !_.isString(ruleName)) {
@@ -662,6 +664,7 @@ Schema.ValidationError = function ValidationError (ruleName, ruleParams) {
 	ruleName || (ruleName = 'unknown');
 	this.ruleName = ruleName;
 	this.ruleParams = ruleParams;
+	this.arrayItemIndex = arrayItemIndex;
 	this.type = this.name = 'ValidationError';
 	Error.call(this);
 
@@ -680,18 +683,20 @@ extend(Schema.ValidationError, Error);
  * @param {String} ruleName - rule name, that failed
  * @param {?*} ruleParams - params of rule, that failed
  * @param {*} value - value, that failed
+ * @param {?Number} [arrayItemIndex=null] - index of array, default null
  * @param {?Array} [path] -  schema path
  * @property {String} type
  * @property {String} name
  * @property {String} ruleName
+ * @property {?Number} arrayItemIndex
  * @property {*} ruleParams
  * @property {*} value
  * @property {?Array} path
  * @returns {Schema.ValidationResultError}
  */
-Schema.ValidationResultError = function ValidationResultError (ruleName, ruleParams, value, path) {
+Schema.ValidationResultError = function ValidationResultError (ruleName, ruleParams, value, arrayItemIndex, path) {
 	if (!(this instanceof Schema.ValidationResultError)) {
-		return new Schema.ValidationResultError(ruleName, ruleParams, value, path);
+		return new Schema.ValidationResultError(ruleName, ruleParams, value, arrayItemIndex, path);
 	}
 
 	path       = _.clone(path || []);
@@ -702,6 +707,7 @@ Schema.ValidationResultError = function ValidationResultError (ruleName, rulePar
 	this.name = 'ValidationResultError';
 	this.type = this.name;
 	this.value = value;
+	this.arrayItemIndex = _.isNumber(arrayItemIndex) ? arrayItemIndex : null;
 	this.path = path;
 
 	return this;
