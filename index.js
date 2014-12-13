@@ -617,16 +617,17 @@ Schema.register = function (name, schema) {
  *
  * @static
  * @param {String} name - name for register.
+ * @param {?Boolean} [strict=true] - strict mode (throw ReferenceError)
  * @throws {TypeError} If invalid name type
  * @throws {ReferenceError} If schema was not registered before
  * @returns {Schema}
  */
-Schema.get = function (name) {
+Schema.get = function (name, strict) {
 	if (!_.isString(name)) {
 		throw new TypeError('invalid name type, must be string');
 	}
 
-	if (!register.hasOwnProperty(name)) {
+	if ((strict == null || strict) && !register.hasOwnProperty(name)) {
 		throw new ReferenceError('schema "' + name + '" was not registered');
 	}
 
