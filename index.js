@@ -23,10 +23,16 @@ var extend = require('./lib/extend');
  * */
 
 /**
+ * @callback verifierCallback
+ * @param {*} value
+ * @param {userValidationDone} done
+ * */
+
+/**
  * @callback validation
- * @param {*}
+ * @param {*} value
  * @param {Object} options
- * @param {userValidationDone}
+ * @param {userValidationDone} done
  * */
 
 /**
@@ -248,6 +254,37 @@ Schema.prototype = {
 	},
 
 	/**
+	 * clone schema to this schema object
+	 *
+	 * @private
+	 * @method
+	 * @this {Schema}
+	 * @param {function} validator
+	 * @param {Object} options
+	 * @returns {Schema} this object
+	 */
+	_compile: function (validator, options) {
+		_.each(this.fields, function (fieldSchema) {
+			fieldSchema._prepare(validator, options);
+		});
+
+		var validations = validator(_.cloneDeep(this.validations), options);
+		if (validations != null) {
+			if (_.isFunction(validations)) {
+				validations = [validations];
+			}
+
+			if (!_.isArray(validations)) {
+				throw new Error('invalid validation rule type after user-validator mapping');
+			}
+
+			this.validations = validations;
+		}
+
+		return this;
+	},
+
+	/**
 	 * verify value. compare schema with some object.
 	 *
 	 * @method
@@ -266,6 +303,24 @@ Schema.prototype = {
 		}
 
 		Schema.verify(this, value, done, options);
+	},
+
+	/**
+	 * compile the verifier
+	 *
+	 * @method
+	 * @this {Schema}
+	 * @param {!validator} validator - custom validation mapper
+	 * @param {?Object} [options] - validation options, default is plain object.
+	 * @returns {verifierCallback}
+	 * */
+	compile: function (validator, options) {
+		options || (options = {});
+		var schema = this.clone()._compile(validator, options);
+
+		return function (value, done) {
+			return schema.verify(value, done);
+		};
 	},
 
 	/**
