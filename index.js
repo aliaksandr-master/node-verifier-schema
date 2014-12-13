@@ -318,6 +318,7 @@ Schema.prototype = {
  * @param {!verifyCallback} done - done-callback.
  * @param {?Object} [options] - validation options, default is plain object.
  * @param {validator} [options.validator] - custom validation mapper
+ * @param {Boolean} [options.ignoreExcess] - ignore excess fields
  */
 Schema.verify = function (schema, value, done, options) {
 	options || (options = {});
@@ -569,6 +570,11 @@ Schema.verifier = {
 	 * @param {verifierDone} done - done-callback
 	 */
 	checkExcessFields: function (schema, value, options, done) {
+		if (options.ignoreExcess) {
+			done();
+			return;
+		}
+
 		var hasExcessFields = _.any(value, function (v, k) {
 			return !_.has(schema.fields, k);
 		});

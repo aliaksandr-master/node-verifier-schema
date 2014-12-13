@@ -78,6 +78,7 @@ exports['Simple Usage'] = {
 			this.required('last_name');
 			this.optional('middle_name');
 		});
+
 		var value = {
 			first_name  : 'hello',
 			last_name   : 'world',
@@ -85,12 +86,33 @@ exports['Simple Usage'] = {
 		};
 		var _keys = _.keys(value);
 		value.excess_field = true;
+
 		sh1.verify(value, function (err, isValid, vError) {
 			test.ok(!isValid);
 			test.equal(vError.ruleName, 'available_fields');
 			test.deepEqual(vError.ruleParams, _keys);
 			test.deepEqual(vError.value, value);
 			test.deepEqual(vError.path, []);
+			test.done(err);
+		});
+	},
+	'verify - ignore excess field' : function (test) {
+		var sh1 = new Schema().object(function () {
+			this.field('first_name');
+			this.required('last_name');
+			this.optional('middle_name');
+		});
+
+		var value = {
+			first_name  : 'hello',
+			last_name   : 'world',
+			middle_name : 'param-pam-pam'
+		};
+		value.excess_field = true;
+
+		sh1.verify(value, { ignoreExcess: true }, function (err, isValid, vError) {
+			test.ok(isValid);
+			test.equal(vError, null);
 			test.done(err);
 		});
 	}

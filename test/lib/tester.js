@@ -5,7 +5,7 @@ var inspect = require('./inspect');
 var tester = function (schema, testCase, objectForValidate) {
 
 	return function (test) {
-		schema.verify(objectForValidate, function (err, isValid, validationError) {
+		schema.verify(objectForValidate, testCase.options, function (err, isValid, validationError) {
 			if (err) {
 				console.log('unexpected error', inspect(err));
 			}
