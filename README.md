@@ -565,21 +565,21 @@ new Schema.ValidationResultError('required', true, value, null);
 ```
 
 ### System predefined errors:
-1. Schema.ValidationResultError('type', 'array', `value`).<br>
-    returned if `schema.isArray` was not compatible with value type (`isArray` = true, but value is not Array).<br>
+1. Schema.ValidationResultError('type', 'array', `value`). <br>
+    returned if `schema.isArray` was not compatible with value type (`isArray` = true, but value is not Array). <br>
     { ruleName: 'type', ruleParams: 'array', value: `value`, arrayItemIndex: null }.
 
-2. Schema.ValidationResultError('type', 'object', `value`).
-    returned if `schema.isArray` was not compatible with value type (`isArray` = false, but value is not Object).<br>
-    { ruleName: 'type', ruleParams: 'array', value: `value`, arrayItemIndex: null }.<br>
+2. Schema.ValidationResultError('type', 'object', `value`). <br>
+    returned if `schema.isArray` was not compatible with value type (`isArray` = false, but value is not Object). <br>
+    { ruleName: 'type', ruleParams: 'array', value: `value`, arrayItemIndex: null }. <br>
 
-3. Schema.ValidationResultError('available_fields', `_.keys(schema.fields)`, `value`, null).<br>
-    returned if value object has field, that not specified in schema.<br>
-    { ruleName: 'available_fields', ruleParams: `_.keys(schema.fields)`, value: `value`, arrayItemIndex: null }.<br>
+3. Schema.ValidationResultError('available_fields', _.keys(schema.fields), `value`, null). <br>
+    returned if value object has field, that not specified in schema. <br>
+    { ruleName: 'available_fields', ruleParams: _.keys(schema.fields), value: `value`, arrayItemIndex: null }. <br>
     You can ignore this error, if set `options.ignoreExcess`=true.
 
-4. Schema.ValidationResultError('required', true, `value`, null).<br>
-    returned if value object is undefined and flag `isRequired`=true.<br>
+4. Schema.ValidationResultError('required', true, `value`, null). <br>
+    returned if value object is undefined and flag `schema.isRequired`=true. <br>
     { ruleName: 'required', ruleParams: true, value: `value`, arrayItemIndex: null }.
 
 arrayItemIndex - specified if this object in array and value is item of array.
