@@ -265,7 +265,7 @@ Schema.prototype = {
 	 */
 	_compile: function (validator, options) {
 		_.each(this.fields, function (fieldSchema) {
-			fieldSchema._prepare(validator, options);
+			fieldSchema._compile(validator, options);
 		});
 
 		var validations = validator(_.cloneDeep(this.validations), options);
