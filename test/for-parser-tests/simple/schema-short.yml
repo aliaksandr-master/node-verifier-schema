@@ -1,0 +1,44 @@
+---
+schema:
+    =:
+        - type object
+    fio:
+        - type object
+    age:
+        - type number
+        - max_value 100
+        - min_value 16
+    family[]:
+        =:
+            - type array
+            - min_length 2
+            - each:
+                - type object
+        first_name:
+            - type string
+            - min_length 3
+            - max_length 20
+        last_name:
+            - type string
+            - min_length 3
+            - max_length 20
+        middle_name?:
+            - type string
+            - min_length 3
+            - max_length 20
+        age?: [ 'type number', 'max_value 100', 'min_value 16' ]
+    education[]:
+        =:
+            - type array
+            - min_length 2
+            - not empty
+            - each:
+                - type string
+                - min_length 3
+                - max_length 20
+        name:
+            - type string
+        type:
+            - type string
+        classes[]?:
+
