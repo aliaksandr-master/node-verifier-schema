@@ -5,13 +5,49 @@ var iterate = require('./lib/iterate');
 var extend = require('./lib/extend');
 
 /**
+ * @callback verifyCallback
+ * @param {?Error} error
+ * @param {Boolean} isValid
+ * @param {?Schema.ValidationResultError} validationError
+ * */
+
+/**
+ * @callback verifierDone
+ * @param {?Error|Boolean|Schema.ValidationError|Schema.ValidationResultError} error - for interrupt of validation stream (plain true), or value validation error, or Error of logic
+ * */
+
+/**
+ * @callback validator
+ * @param {array} validations - validations of this schema
+ * @returns {validation}
+ * */
+
+/**
+ * @callback validation
+ * @param {*}
+ * @param {Object} options
+ * @param {userValidationDone}
+ * */
+
+/**
+ * @callback userValidationDone
+ * @param {?Error|Schema.ValidationError|Boolean} err
+ * @param {?Boolean} isValid=true
+ * @param {?Schema.ValidationError}
+ * */
+
+/**
  * Create instance of Schema
  *
- * @constructors
+ * @constructor
  * @this {Schema}
  * @class Schema
  * @param {string} [name] - register name
- * @return {Schema}
+ * @property {Boolean} isRequired=true
+ * @property {?Boolean} isArray=false
+ * @property {?Object} fields=undefined
+ * @property {?Array} validations=[]
+ * @returns {Schema}
  */
 function Schema (name) {
 	if (!(this instanceof Schema)) {
@@ -23,6 +59,9 @@ function Schema (name) {
 	}
 
 	this.isRequired = true;
+	//this.isArray = false;
+	//this.fields = undefined;
+	//this.validations = [];
 }
 
 Schema.prototype = {
@@ -33,10 +72,11 @@ Schema.prototype = {
 	 * @method
 	 * @param {!Schema|string} schema - attach destination object.
 	 * @param {!String} name - field name for attach.
+	 * @this {Schema}
 	 * @throws {TypeError} If schema isn't Schema type
 	 * @throws {TypeError} If name empty or isn't String type
 	 * @throws {Error} If schema already has the same key name
-	 * @return {Schema} @this
+	 * @returns {Schema} @this
 	 */
 	attachTo: function (schema, name) {
 		if (_.isString(schema)) {
@@ -58,10 +98,11 @@ Schema.prototype = {
 	/**
 	 * @private
 	 * @method
+	 * @this {Schema}
 	 * @param {!Schema} schema - attach destination object.
 	 * @param {!String} name - field name for attach.
 	 * @throws {Error} If schema already has the same key name
-	 * @return {Schema} @this
+	 * @returns {Schema} @this
 	 */
 	_attach: function (schema, name) {
 		if (!this.fields) {
@@ -79,8 +120,9 @@ Schema.prototype = {
 	 * set validate options. can be called several times
 	 *
 	 * @method
+	 * @this {Schema}
 	 * @param {!*} validations - validation options.
-	 * @return {Schema} @this
+	 * @returns {Schema} @this
 	 */
 	validate: function (validations) {
 		if (!validations) {
@@ -104,9 +146,10 @@ Schema.prototype = {
 	 * set nested fields builder
 	 *
 	 * @method
+	 * @this {Schema}
 	 * @param {!Function|Schema|String} builderOrSchema - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
-	 * @return {Schema} @this
+	 * @returns {Schema} @this
 	 */
 	object: function (builderOrSchema) {
 		if (this.fields) {
@@ -134,9 +177,10 @@ Schema.prototype = {
 	 * set nested fields builder with type array
 	 *
 	 * @method
+	 * @this {Schema}
 	 * @param {?Function|Schema|Boolean} [builderOrSchema] - builder function, has two functions in arguments [required, options].
 	 * @throws {TypeError} If nested is not a function if specified
-	 * @return {Schema} @this
+	 * @returns {Schema} @this
 	 */
 	array: function (builderOrSchema) {
 		if (_.isFunction(builderOrSchema) || builderOrSchema instanceof Schema) {
@@ -152,8 +196,9 @@ Schema.prototype = {
 	 * add new nested schema by construct
 	 *
 	 * @method
+	 * @this {Schema}
 	 * @param {!String} name - field name.
-	 * @return {Schema}
+	 * @returns {Schema}
 	 */
 	field: function (name) {
 		return new Schema().attachTo(this, name);
@@ -163,7 +208,8 @@ Schema.prototype = {
 	 * clone this schema
 	 *
 	 * @method
-	 * @return {Schema} new object (clone)
+	 * @this {Schema}
+	 * @returns {Schema} new object (clone)
 	 */
 	clone: function () {
 		var clone = new Schema()._similar(this);
@@ -180,7 +226,8 @@ Schema.prototype = {
 	 *
 	 * @private
 	 * @method
-	 * @return {Schema} new object (clone)
+	 * @this {Schema}
+	 * @returns {Schema} new object (clone)
 	 */
 	_similar: function (schema) {
 		var that = this;
@@ -204,6 +251,7 @@ Schema.prototype = {
 	 * verify value. compare schema with some object.
 	 *
 	 * @method
+	 * @this {Schema}
 	 * @param {*} value - value for check.
 	 * @param {?Object} [options] - validation options, default is plain object.
 	 * @param {?validator} [options.validator] - custom validation mapper
@@ -224,9 +272,10 @@ Schema.prototype = {
 	 * add new required nested schema by construct
 	 *
 	 * @method
+	 * @this {Schema}
 	 * @param {?String} [name] - field name.
 	 * @param {?*} [validation] - validation options.
-	 * @return {Schema}
+	 * @returns {Schema}
 	 */
 	required: function (name, validation) {
 		if (!arguments.length || (name == null && validation == null)) {
@@ -241,9 +290,10 @@ Schema.prototype = {
 	 * add new optional nested schema by construct
 	 *
 	 * @method
+	 * @this {Schema}
 	 * @param {?String} [name] - field name.
 	 * @param {?*} [validation] - validation options.
-	 * @return {Schema}
+	 * @returns {Schema}
 	 */
 	optional: function (name, validation) {
 		if (!arguments.length || (name == null && validation == null)) {
@@ -257,38 +307,6 @@ Schema.prototype = {
 	}
 };
 
-
-/**
- * @callback verifyCallback
- * @param {?Error} error
- * @param {Boolean} isValid
- * @param {?Schema.ValidationResultError} validationError
- * */
-
-/**
- * @callback verifierDone
- * @param {?Error|Boolean|Schema.ValidationError|Schema.ValidationResultError} error - for interrupt of validation stream (plain true), or value validation error, or Error of logic
- * */
-
-/**
- * @callback validator
- * @param {array} validations - validations of this schema
- * @return {validation}
- * */
-
-/**
- * @callback validation
- * @param {*}
- * @param {Object} options
- * @param {userValidationDone}
- * */
-
-/**
- * @callback userValidationDone
- * @param {?Error|Schema.ValidationError|Boolean} err
- * @param {?Boolean} isValid=true
- * @param {?Schema.ValidationError}
- * */
 
 /**
  * verify value. compare schema with some object.
@@ -329,11 +347,14 @@ Schema.verify = function (schema, value, done, options) {
 	});
 };
 
+/**
+ * @namespace
+ * @static
+ * */
 Schema.verifier = {
 	/**
 	 * verify object
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -356,7 +377,6 @@ Schema.verifier = {
 	/**
 	 * check isRequired flag with value
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -381,7 +401,6 @@ Schema.verifier = {
 	/**
 	 * check self validation of value
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -395,7 +414,6 @@ Schema.verifier = {
 	/**
 	 * check validation of value
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema
 	 * @param {?Array} validations.
@@ -445,7 +463,6 @@ Schema.verifier = {
 	/**
 	 * verify inner object
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -468,7 +485,6 @@ Schema.verifier = {
 	/**
 	 * check is array flag
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -487,7 +503,6 @@ Schema.verifier = {
 	/**
 	 * verify inner fields
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -508,7 +523,6 @@ Schema.verifier = {
 	/**
 	 * check nested fields
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -525,7 +539,6 @@ Schema.verifier = {
 	/**
 	 * check exists of fields and correct data type
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -549,7 +562,6 @@ Schema.verifier = {
 	/**
 	 * find the excess fields, that not defined
 	 *
-	 * @private
 	 * @method
 	 * @param {Schema} schema for validate.
 	 * @param {*} value - value for check
@@ -576,12 +588,12 @@ var register = {};
  * Schema register
  *
  * @static
- * @param {String} name - name for register.
- * @param {Schema} schema - schema for register
+ * @param {!String} name - name for register.
+ * @param {!Schema} schema - schema for register
  * @throws {TypeError} If invalid name type
  * @throws {TypeError} If schema name type
  * @throws {ReferenceError} If schema was already registered
- * @return {Schema}
+ * @returns {Schema}
  */
 Schema.register = function (name, schema) {
 	if (!_.isString(name)) {
@@ -607,7 +619,7 @@ Schema.register = function (name, schema) {
  * @param {String} name - name for register.
  * @throws {TypeError} If invalid name type
  * @throws {ReferenceError} If schema was not registered before
- * @return {Schema}
+ * @returns {Schema}
  */
 Schema.get = function (name) {
 	if (!_.isString(name)) {
@@ -621,29 +633,22 @@ Schema.get = function (name) {
 	return register[name];
 };
 
-Schema.errorMessageMap = {
-	default: function (ruleName, ruleParams, path, value) {
-		return 'invalid value ' + ruleName + ' in ' + path;
-	}
-};
-
-Schema.errorMessage = function (ruleName, ruleParams, path, value) {
-	var map = Schema.errorMessageMap[ruleName] || Schema.errorMessageMap.default;
-	return map(ruleName, ruleParams, path, value);
-};
-
 /**
  * Create instance of Schema.ValidationError. Error object for info about miss value
  *
- * @constructors
+ * @constructor
+ * @static
  * @extends Error
  * @this {Schema.ValidationError}
  * @class Schema.ValidationError
  * @param {string} ruleName - rule name, that failed
  * @param {*} ruleParams - params of rule, that failed
- * @return {Schema.ValidationError}
+ * @property {String} type
+ * @property {String} name
+ * @property {String} ruleName
+ * @property {*} ruleParams
+ * @returns {Schema.ValidationError}
  */
-
 Schema.ValidationError = function ValidationError (ruleName, ruleParams) {
 	if (!(this instanceof Schema.ValidationError)) {
 		return new Schema.ValidationError(ruleName, ruleParams);
@@ -666,15 +671,22 @@ extend(Schema.ValidationError, Error);
 /**
  * Create instance of Schema.ValidationError. Error object for info about miss value
  *
- * @constructors
+ * @constructor
+ * @static
  * @extends Schema.ValidationError
  * @this {Schema.ValidationResultError}
  * @class Schema.ValidationResultError
- * @param {string} ruleName - rule name, that failed
- * @param {*} ruleParams - params of rule, that failed
+ * @param {String} ruleName - rule name, that failed
+ * @param {?*} ruleParams - params of rule, that failed
  * @param {*} value - value, that failed
- * @param {Array|null} path -  schema path
- * @return {Schema.ValidationResultError}
+ * @param {?Array} [path] -  schema path
+ * @property {String} type
+ * @property {String} name
+ * @property {String} ruleName
+ * @property {*} ruleParams
+ * @property {*} value
+ * @property {?Array} path
+ * @returns {Schema.ValidationResultError}
  */
 Schema.ValidationResultError = function ValidationResultError (ruleName, ruleParams, value, path) {
 	if (!(this instanceof Schema.ValidationResultError)) {
@@ -686,8 +698,8 @@ Schema.ValidationResultError = function ValidationResultError (ruleName, rulePar
 	ruleParams = _.cloneDeep(ruleParams);
 
 	Schema.ValidationError.call(this, ruleName, ruleParams);
-	this.message = Schema.errorMessage(ruleName, ruleParams, value, path);
-	this.type = this.name = 'ValidationResultError';
+	this.name = 'ValidationResultError';
+	this.type = this.name;
 	this.value = value;
 	this.path = path;
 
