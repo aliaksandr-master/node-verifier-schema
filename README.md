@@ -16,16 +16,17 @@ var Schema = require('node-verifier-schema');
 ```
 
 ## Features
-1. Several types of object schema build
-2. Built-in register for schemas
-3. Does not impose validator. You can use any framework (wrappers), that implement validator interfaces
-4. Correct nesting of schemas
-5. Easy to test
-6. Simple class implementation
-7. one dependencies is lodash
-8. You may use Shema constructor as function (returned Schema instance anyway)
-9. Chain calls
-10. Async validation support (node like)
+- Several types of object schema build
+- Built-in register for schemas
+- Does not impose validator. You can use any framework (wrappers), that implement validator interfaces
+- Correct nesting of schemas
+- Easy to test
+- Simple class implementation
+- one dependencies is lodash
+- You may use Shema constructor as function (returned Schema instance anyway)
+- Chain calls
+- Async validation support (node like)
+- Save your schema in yml format and load by schema-loader
 
 ## Simple Usage
 
@@ -318,3 +319,155 @@ sc1.field('some').optional();
 sc1.optional('some');
 ```
 
+## Schema File Loader
+
+load your schema from YAML (or JS) file
+
+### Use
+```js
+var Schema = require('node-verifier-schema');
+var schemaLoader = require('node-verifier-schema/load');
+
+var schema1 = schemaLoader('path/to/file.tml');
+
+// load schema and register as 'nameForThisSchema'
+schemaLoader('path/to/file.tml', 'nameForThisSchema');
+var schema2 = Schema.get('nameForThisSchema');
+```
+
+Function schemaLoader has two params
+schemaLoader(absFilePath [, name])
+absFilePath: `String` - absolute path of file that need to load. Must have js, yaml or yml file extension as default
+name: `String` - optional - name for register this schema in Schema.register
+
+### YAML full syntax:
+schema declaration must start from `schema`, and you can add `[]` for mark this schema as array type, and `?` as optional
+inside fields should not named as `=`, has `[]` and `?` flags as in schema declaration
+attribute name `=` means validation
+validation must be array, inside items of validations you may specify value as you want (inside array, hash, string and so on)
+```yaml
+---
+schema: # required attribute of schema declaration, if this is array - add '[]', if optional - add '?' on key end
+    =: # this symbol for declaration of validations of this schema-element
+        - type object
+    fio: # inside field 'fio' declaration
+        =:
+            - type object
+    age:
+        =:
+            - type number
+            - max_value 100
+            - min_value 16
+    family[]: # this is array field 'family' with objects
+        =:
+            - type array
+            - min_length 2
+            - each:
+                - type object ## inside of validation
+        first_name:
+            =:
+                - type string
+                - min_length 3
+                - max_length 20
+        last_name:
+            =:
+                - type string
+                - min_length 3
+                - max_length 20
+        middle_name?:
+            =:
+                - type string
+                - min_length 3
+                - max_length 20
+        age?: # this is optional field
+            =: [ 'type number', 'max_value 100', 'min_value 16' ]
+    education[]:
+        =:
+            - type array
+            - min_length 2
+            - not empty
+            - each:
+                - type string
+                - min_length 3
+                - max_length 20
+        name:
+            =:
+                - type string
+        type:
+            =:
+                - type string
+        classes[]?: # this optional array field 'classes'
+```
+
+### YAML short syntax:
+if your schema of field has no nested fields - you can specify validation items as array without validation attribute '='
+```yaml
+---
+schema:
+    =:
+        - type object
+    fio:
+        - type object
+    age:
+        - type number
+        - max_value 100
+        - min_value 16
+    family[]:
+        =:
+            - type array
+            - min_length 2
+            - each:
+                - type object
+        first_name:
+            - type string
+            - min_length 3
+            - max_length 20
+        last_name:
+            - type string
+            - min_length 3
+            - max_length 20
+        middle_name?:
+            - type string
+            - min_length 3
+            - max_length 20
+        age?: [ 'type number', 'max_value 100', 'min_value 16' ]
+    education[]:
+        =:
+            - type array
+            - min_length 2
+            - not empty
+            - each:
+                - type string
+                - min_length 3
+                - max_length 20
+        name:
+            - type string
+        type:
+            - type string
+        classes[]?:
+```
+
+#### Previous YAML examples equal next js code
+
+```js
+// js equivalent
+var schema = new Schema().validate('type object').object(function (r, o) {
+	r('fio', 'type object', function (r, o) {
+		r('first_name',  ['type string', 'min_length 3', 'max_length 20']);
+		r('last_name',   ['type string', 'min_length 3', 'max_length 20']);
+		o('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+	});
+	r('age', ['type number', 'max_value 100', 'min_value 16']);
+	r('family', ['type array', 'min_length 2', {each: ['type object']}]).array(function (r, o) {
+		r('first_name',  ['type string', 'min_length 3', 'max_length 20']);
+		r('last_name',   ['type string', 'min_length 3', 'max_length 20']);
+		o('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+		o('age', ['type number', 'max_value 100', 'min_value 16']);
+	});
+	r('education', ['type array', 'min_length 2', 'not empty', {each: ['type string', 'min_length 3', 'max_length 20']}]).array(function (r, o) {
+		r('name', 'type string');
+		r('type', 'type string');
+		o('classes').array();
+	});
+})
+```
