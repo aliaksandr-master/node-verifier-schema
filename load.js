@@ -27,7 +27,7 @@ LoaderYAML.prototype = {
 		return this.toSchema(data);
 	},
 
-	KEY_FIELD_REG_EXP: /^([^\[\?]+)(\[])?(\?)?$/,
+	KEY_FIELD_REG_EXP: /^([^\[\?]*)(\[])?(\?)?$/,
 
 	KEY_SCHEMA_REG_EXP: /^schema(?:\(\s*([^\)'"]+)\s*\))?(\??)$/,
 
