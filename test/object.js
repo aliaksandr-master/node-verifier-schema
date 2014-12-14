@@ -72,16 +72,16 @@ var s1 = new Schema().object(function (required, optional) {
 });
 
 exports['validate object'] = {
-	'#1': tester(s1, { expect: false }, undefined),
-	'#2': tester(s1, { expect: false }, {}),
-	'#3': tester(s1, { expect: false }, []),
-	'#4': tester(s1, { expect: false }, null),
-	'#5': tester(s1, { expect: false }, 3),
-	'#6': tester(s1, { expect: false }, "asdasd"),
+	'#1': tester(s1, { expect: false, validationError: { ruleName: 'required', ruleParams: true, path: [ ] } }, undefined),
+	'#2': tester(s1, { expect: false, validationError: { ruleName: 'required', ruleParams: true, path: [ 'age' ] } }, {}),
+	'#3': tester(s1, { expect: false, validationError: { ruleName: 'type', ruleParams: 'object', path: [ ] } }, []),
+	'#4': tester(s1, { expect: false, validationError: { ruleName: 'type', ruleParams: 'object', path: [ ] } }, null),
+	'#5': tester(s1, { expect: false, validationError: { ruleName: 'type', ruleParams: 'object', path: [ ] } }, 3),
+	'#6': tester(s1, { expect: false, validationError: { ruleName: 'type', ruleParams: 'object', path: [ ] } }, "asdasd"),
 	'#7': tester(s1, { expect: true }, {
 		'age': null
 	}),
-	'#8': tester(s1, { expect: false }, {
+	'#8': tester(s1, { expect: false, validationError: { ruleName: 'required', ruleParams: true, path: [ 'age' ] } }, {
 		'age': undefined
 	}),
 	'#9': tester(s1, { expect: true }, {
@@ -98,20 +98,27 @@ exports['validate object'] = {
 		},
 		'school_names': undefined
 	}),
-	'#12': tester(s1, { expect: false }, {
+	'#12': tester(s1, { expect: false, validationError: { ruleName: 'available_fields', ruleParams: ['age', 'school_names'], path: [ ] } }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},
 		'school_names': undefined,
 		'some': 123123
 	}),
-	'#13': tester(s1, { expect: false }, {
+	'#12-ignore': tester(s1, { expect: true, options: { ignoreExcess: true } }, {
+		'age': {
+			'asdasdasd': 'asdasdasd'
+		},
+		'school_names': undefined,
+		'some': 123123
+	}),
+	'#13': tester(s1, { expect: false, validationError: { ruleName: 'available_fields', ruleParams: ['age', 'school_names'], path: [ ] } }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},
 		'some': 123123
 	}),
-	'#14': tester(s1, { expect: false }, {
+	'#14': tester(s1, { expect: false, validationError: { ruleName: 'available_fields', ruleParams: ['age', 'school_names'], path: [ ] } }, {
 		'age': {
 			'asdasdasd': 'asdasdasd'
 		},

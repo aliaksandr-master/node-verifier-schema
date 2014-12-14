@@ -25,9 +25,11 @@ exports['Simple Usage'] = {
 		sh4.required('first_name');
 		sh4.field('last_name');
 		sh4.optional('middle_name');
+
 		test.deepEqual(sh1, sh2);
 		test.deepEqual(sh1, sh3);
 		test.deepEqual(sh1, sh4);
+
 		test.done();
 	},
 	'verify - no specified fields' : function (test) {
@@ -39,10 +41,12 @@ exports['Simple Usage'] = {
 		var value = {};
 		sh1.verify(value, function (err, isValid, vError) {
 			test.ok(!isValid);
+
 			test.equal(vError.ruleName, 'required');
 			test.strictEqual(vError.ruleParams, true);
 			test.strictEqual(vError.value, undefined);
-			//test.deepEqual(vError.path, ['first_name']);
+			test.deepEqual(vError.path, ['first_name']);
+
 			test.done(err);
 		});
 	},

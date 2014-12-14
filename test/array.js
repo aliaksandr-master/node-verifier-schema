@@ -6,11 +6,92 @@ var tester = require('./lib/tester');
 
 var s1 = new Schema().array();
 
-//exports['validate value-array'] = {
-//	'#1': tester(s1, { expected: true }, []),
-//	//'#2': tester(s1, { expected: false }, undefined)
-//};
+var arrSh1 = new Schema().object(function (r, o) {
+	r('fio').object(function (r, o) {
+		r('first_name');
+		r('last_name');
+		o('middle_name');
+	});
+	r('age');
+	r('family').array(function (r, o) {
+		r('first_name');
+		r('last_name');
+		o('middle_name');
+		o('age');
+	});
+	r('education').array(function (r, o) {
+		r('name');
+		r('type');
+		o('classes').array();
+	});
+});
 
+exports['validate value-array'] = {
+	'#1': tester(s1, { expect: true }, []),
+	'#2': tester(s1, { expect: false }, undefined),
+
+	'check path - valid': tester(arrSh1, { expect: true }, {
+		'fio': {
+			'first_name': 'Homer',
+			'last_name': 'Simpson'
+		},
+		'age': 46,
+		'family': [
+			{
+				'first_name': 'Bart',
+				'last_name': 'Simpson',
+				'age': 13
+			},
+			{
+				'first_name': 'Lisa',
+				'last_name': 'Simpson',
+				'age': 11
+			},
+			{
+				'first_name': 'Marge',
+				'last_name': 'Simpson',
+				'age': 43
+			}
+		],
+		'education': [
+			{
+				name: 'school 4',
+				type: 'school',
+				classes: [1, 2, 3]
+			}
+		]
+	}),
+
+	'check path - invalid': tester(arrSh1, { expect: false, validationError: { ruleName: 'required', ruleParams: true, path: [ 'family', '1', 'first_name' ] } }, {
+		'fio': {
+			'first_name': 'Homer',
+			'last_name': 'Simpson'
+		},
+		'age': 46,
+		'family': [
+			{
+				'first_name': 'Bart',
+				'last_name': 'Simpson',
+				'age': 13
+			},
+			{
+				'age': 11
+			},
+			{
+				'first_name': 'Marge',
+				'last_name': 'Simpson',
+				'age': 43
+			}
+		],
+		'education': [
+			{
+				name: 'school 4',
+				type: 'school',
+				classes: [ 1, 2, 3 ]
+			}
+		]
+	})
+};
 
 var s2 = new Schema().array(function (required, optional) {
 	required('age');
@@ -18,20 +99,20 @@ var s2 = new Schema().array(function (required, optional) {
 });
 
 exports['validate object-array'] = {
-	'#1': tester(s2, { expect: false }, undefined),
-	'#2': tester(s2, { expect: false }, {}),
+	'#1': tester(s2, { expect: false, validationError: { ruleName: 'required', ruleParams: true, path: [ ] } }, undefined),
+	'#2': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'array', path: [ ] } }, {}),
 	'#3': tester(s2, { expect: true }, []),
-	'#4': tester(s2, { expect: false }, null),
-	'#5': tester(s2, { expect: false }, 3),
-	'#6': tester(s2, { expect: false }, "asdasd"),
-	'#7': tester(s2, { expect: false }, {
+	'#4': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'array', path: [ ] } }, null),
+	'#5': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'array', path: [ ] } }, 3),
+	'#6': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'array', path: [ ] } }, "asdasd"),
+	'#7': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'array', path: [ ] } }, {
 		'age': null
 	}),
-	'#8': tester(s2, { expect: false }, {
+	'#8': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'array', path: [ ] } }, {
 		'age': null,
 		'school_names': undefined
 	}),
-	'#9': tester(s2, { expect: false }, {
+	'#9': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'array', path: [ ] } }, {
 		'age': null,
 		'school_names': null,
 		'some': 123123
@@ -47,7 +128,7 @@ exports['validate object-array'] = {
 			'school_names': undefined
 		}
 	]),
-	'#12': tester(s2, { expect: false }, [
+	'#12': tester(s2, { expect: false, validationError: { ruleName: 'available_fields', ruleParams: [ 'age', 'school_names' ], path: [ '0' ] } }, [
 		{
 			'age': null,
 			'school_names': null,
@@ -82,7 +163,7 @@ exports['validate object-array'] = {
 			'school_names': null
 		}
 	]),
-	'#16': tester(s2, { expect: false }, [
+	'#16': tester(s2, { expect: false, validationError: { ruleName: 'required', ruleParams: true, path: [ '0', 'age' ] } }, [
 		{
 			'school_names': null
 		},
@@ -91,9 +172,11 @@ exports['validate object-array'] = {
 			'school_names': null
 		}
 	]),
-	'#17': tester(s2, { expect: false }, [
+	'#17': tester(s2, { expect: false, validationError: { ruleName: 'required', ruleParams: true, path: [ '0', 'age' ] } }, [
 		{},
 		{}
 	]),
-	'#18': tester(s2, { expect: false }, [ 1, 2, 3 ])
+	'#18': tester(s2, { expect: false, validationError: { ruleName: 'type', ruleParams: 'object', path: [ '0' ] } },
+		[ 1, 2, 3 ]
+	)
 };
