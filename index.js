@@ -431,7 +431,7 @@ Schema.verifier = {
 			this.checkObject
 		], function (method, _2, done) {
 			method.call(that, schema, value, options, path, done);
-		}, done);
+		}, this._doneWrap(done));
 	},
 
 	/**
@@ -577,7 +577,20 @@ Schema.verifier = {
 			this.checkNestedFields
 		], function (method, _2, done) {
 			method.call(that, schema, value, options, path, done);
-		});
+		}, this._doneWrap(done));
+	},
+
+	_doneWrap: function (done) {
+		return function (err) {
+			if (!err || err === true) {
+				done();
+				return;
+			}
+
+			if (err) {
+				done(err);
+			}
+		};
 	},
 
 	/**
