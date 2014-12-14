@@ -163,7 +163,7 @@ Schema.prototype = {
 		}
 
 		if (_.isString(builderOrSchema)) {
-			builderOrSchema = Schema.get(builderOrSchema);
+			builderOrSchema = Schema.get(builderOrSchema).clone();
 		}
 
 		if (builderOrSchema instanceof Schema) {
@@ -189,11 +189,12 @@ Schema.prototype = {
 	 * @returns {Schema} @this
 	 */
 	array: function (builderOrSchema) {
-		if (_.isFunction(builderOrSchema) || builderOrSchema instanceof Schema) {
+		var build = _.isFunction(builderOrSchema) || builderOrSchema instanceof Schema;
+		if (build) {
 			this.object(builderOrSchema);
 		}
 
-		this.isArray = builderOrSchema == null ? true : Boolean(builderOrSchema);
+		this.isArray = builderOrSchema == null || build ? true : Boolean(builderOrSchema);
 
 		return this;
 	},
