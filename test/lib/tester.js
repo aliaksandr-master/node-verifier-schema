@@ -1,5 +1,6 @@
 "use strict";
 
+var _ = require('lodash');
 var inspect = require('./inspect');
 
 var tester = function (schema, testCase, objectForValidate) {
@@ -10,7 +11,13 @@ var tester = function (schema, testCase, objectForValidate) {
 				console.log('unexpected error', inspect(err));
 			}
 
-			test.equal(isValid, testCase.expect, 'invalid result ' + inspect(err) + inspect(isValid) + inspect(validationError));
+			if (testCase.validationError != null) {
+				_.each(testCase.validationError, function (v, k) {
+					test.deepEqual(validationError[k], v);
+				});
+			}
+
+			test.strictEqual(isValid, testCase.expect, 'invalid result ' + inspect(err) + inspect(isValid) + inspect(validationError));
 			test.done(err);
 		});
 	};
