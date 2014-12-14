@@ -387,7 +387,7 @@ Schema.verify = function (schema, value, done, options) {
 		throw new TypeError('schema verify callback must be function, ' + (typeof done) + ' given');
 	}
 
-	Schema.verifier.verifySchema(schema, value, options, function (err) {
+	Schema.verifier.verifySchema(schema, value, options, '', function (err) {
 		err = err === true ? null : err;
 
 		if (err instanceof Schema.ValidationResultError) {
@@ -418,7 +418,7 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	verifySchema: function (schema, value, options, done) {
+	verifySchema: function (schema, value, options, path, done) {
 		var that = this;
 
 		iterate.array([
@@ -427,7 +427,7 @@ Schema.verifier = {
 			this.checkValidations,
 			this.checkObject
 		], function (method, _2, done) {
-			method.call(that, schema, value, options, done);
+			method.call(that, schema, value, options, path, done);
 		}, done);
 	},
 
@@ -440,7 +440,7 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	checkRequired: function (schema, value, options, done) {
+	checkRequired: function (schema, value, options, path, done) {
 		if (value !== undefined) {
 			done();
 			return;
@@ -464,8 +464,8 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	checkValidations: function (schema, value, options, done) {
-		this.validationCall(schema, schema.validations, value, options, done);
+	checkValidations: function (schema, value, options, path, done) {
+		this.validationCall(schema, schema.validations, value, options, path, done);
 	},
 
 	/**
@@ -478,7 +478,7 @@ Schema.verifier = {
 	 * @param {Object} options
 	 * @param {verifierDone} done - done-callback
 	 */
-	validationCall: function (schema, validations, value, options, done) {
+	validationCall: function (schema, validations, value, options, path, done) {
 		if (_.isEmpty(validations)) {
 			done();
 			return;
@@ -526,16 +526,16 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	checkObject: function (schema, value, options, done) {
+	checkObject: function (schema, value, options, path, done) {
 		var that = this;
 
 		if (!schema.isArray) {
-			this.validateFields(schema, value, options, done);
+			this.validateFields(schema, value, options, path, done);
 			return;
 		}
 
 		iterate.array(value, function (value, index, done) {
-			that.validateFields(schema, value, options, done);
+			that.validateFields(schema, value, options, path, done);
 		}, done);
 	},
 
@@ -548,7 +548,7 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	checkIsArray: function (schema, value, options, done) {
+	checkIsArray: function (schema, value, options, path, done) {
 		if (Boolean(schema.isArray) === _.isArray(value)) {
 			done();
 			return;
@@ -566,14 +566,14 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	validateFields: function (schema, value, options, done) {
+	validateFields: function (schema, value, options, path, done) {
 		var that = this;
 		iterate.array([
 			this.checkFieldsExists,
 			this.checkExcessFields,
 			this.checkNestedFields
 		], function (method, _2, done) {
-			method.call(that, schema, value, options, done);
+			method.call(that, schema, value, options, path, done);
 		}, done);
 	},
 
@@ -586,10 +586,10 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	checkNestedFields: function (schema, value, options, done) {
+	checkNestedFields: function (schema, value, options, path, done) {
 		var that = this;
 		iterate.object(schema.fields, function (fieldSchema, name, done) {
-			that.verifySchema(fieldSchema, value[name], options, done);
+			that.verifySchema(fieldSchema, value[name], options, path, done);
 		}, done);
 	},
 
@@ -602,7 +602,7 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	checkFieldsExists: function (schema, value, options, done) {
+	checkFieldsExists: function (schema, value, options, path, done) {
 		if (!schema.fields) {
 			done(true);
 			return;
@@ -625,7 +625,7 @@ Schema.verifier = {
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
-	checkExcessFields: function (schema, value, options, done) {
+	checkExcessFields: function (schema, value, options, path, done) {
 		if (options.ignoreExcess) {
 			done();
 			return;
