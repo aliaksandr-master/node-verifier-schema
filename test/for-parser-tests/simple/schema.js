@@ -3,7 +3,7 @@
 var Schema = require('../../../index');
 
 module.exports = new Schema().validate('type object').object(function (r, o) {
-	r('fio', 'type object', function (r, o) {
+	r('fio', 'type object').object(function (r, o) {
 		r('first_name',  ['type string', 'min_length 3', 'max_length 20']);
 		r('last_name',   ['type string', 'min_length 3', 'max_length 20']);
 		o('middle_name', ['type string', 'min_length 3', 'max_length 20']);

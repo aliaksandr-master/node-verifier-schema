@@ -3,7 +3,20 @@ schema:
     =:
         - type object
     fio:
-        - type object
+        =:
+            - type object
+        first_name:
+            - type string
+            - min_length 3
+            - max_length 20
+        last_name:
+            - type string
+            - min_length 3
+            - max_length 20
+        middle_name?:
+            - type string
+            - min_length 3
+            - max_length 20
     age:
         - type number
         - max_value 100
