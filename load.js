@@ -5,6 +5,7 @@ var path = require('path');
 var fs = require('fs');
 var yaml = require('js-yaml');
 var Schema = require('./index');
+var iterate = require('./lib/iterate');
 
 /**
  * @class LoaderYAML
@@ -32,7 +33,7 @@ LoaderYAML.prototype = {
 	KEY_SCHEMA_REG_EXP: /^schema(?:\(\s*([^\)'"]+)\s*\))?(\??)$/,
 
 	/**
-	 * parse schema
+	 * parse schema hash key
 	 *
 	 * @method
 	 * @private
@@ -40,10 +41,10 @@ LoaderYAML.prototype = {
 	 * @param {String} key
 	 * @returns {Schema}
 	 */
-	_parseSchema: function (key) {
+	_parseSchemaHashKey: function (key) {
 		var schema;
 
-		key.replace(this.KEY_SCHEMA_REG_EXP, function (w, name, hasOptionalFlag) {
+		String(key).replace(this.KEY_SCHEMA_REG_EXP, function (w, name, hasOptionalFlag) {
 			schema = new Schema(name || null);
 
 			if (hasOptionalFlag) {
@@ -59,7 +60,7 @@ LoaderYAML.prototype = {
 	},
 
 	/**
-	 * convert object (JSON) to Schema type
+	 * convert object (JSON) to Schema object
 	 *
 	 * @method
 	 * @this {LoaderYAML}
@@ -80,11 +81,28 @@ LoaderYAML.prototype = {
 			}
 		}
 
-		return this._recursiveConvectionToSchema(data[schemaKey], this._parseSchema(String(schemaKey)));
+		var mainSchema = this._parseSchemaHashKey(schemaKey);
+		iterate.recursiveEach(data[schemaKey], mainSchema, function (v, k, schema) {
+			if (/^=+$/.test(k)) {
+				schema.validate(v);
+				return;
+			}
+
+			schema = this._parseAndAddField(k, schema);
+			if (_.isArray(v)) {
+				schema.validate(v);
+				return;
+			}
+
+			return schema;
+		}, this);
+
+		return mainSchema;
 	},
 
 	/**
-	 * parse fieldKey to field schema. add field schema to parent schema
+	 * parse fieldKey to field schema.
+	 * add field schema to parent schema
 	 *
 	 * @method
 	 * @private
@@ -93,7 +111,7 @@ LoaderYAML.prototype = {
 	 * @param {Schema} parent
 	 * @returns {Schema} child field schema
 	 */
-	_addField: function (fieldName, parent) {
+	_parseAndAddField: function (fieldName, parent) {
 		var name, isRequired = true, isArray = false;
 
 		name = fieldName.replace(this.KEY_FIELD_REG_EXP, function (w, nameStr, hasArrayFlag, hasOptionalFlag) {
@@ -122,37 +140,6 @@ LoaderYAML.prototype = {
 		}
 
 		return schema.attachTo(parent, name);
-	},
-
-	/**
-	 * recursive convert Object to Schema type
-	 *
-	 * @method
-	 * @private
-	 * @this {LoaderYAML}
-	 * @param {Object} inner
-	 * @param {Schema} parentSchema
-	 * @returns {Schema} parentSchema
-	 */
-	_recursiveConvectionToSchema: function (inner, parentSchema) {
-		var that = this;
-
-		_.each(inner, function (v, k) {
-			if (/^=+$/.test(k)) {
-				parentSchema.validate(v);
-				return;
-			}
-
-			var schema = that._addField(k, parentSchema);
-			if (_.isArray(v)) {
-				schema.validate(v);
-				return;
-			}
-
-			that._recursiveConvectionToSchema(v, schema);
-		});
-
-		return parentSchema;
 	},
 
 	/**
