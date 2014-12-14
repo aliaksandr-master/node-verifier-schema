@@ -42,6 +42,9 @@ var extend = require('./lib/extend');
  * @param {?Schema.ValidationError}
  * */
 
+var SEP = '/';
+var SEP_EXP_FIRST = /^\//;
+
 /**
  * Create instance of Schema
  *
@@ -447,7 +450,7 @@ Schema.verifier = {
 		}
 
 		if (schema.isRequired) {
-			done(new Schema.ValidationResultError('required', true, value, null/*, schema.path*/));
+			done(new Schema.ValidationResultError('required', true, value, null, path));
 			return;
 		}
 
@@ -500,7 +503,7 @@ Schema.verifier = {
  			validation(value, function (err, isValid, validationError) {
 				if (err) {
 					if (err instanceof Schema.ValidationError) {
-						err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value, err.arrayItemIndex/*, schema.path*/);
+						err = new Schema.ValidationResultError(err.ruleName, err.ruleParams, value, err.arrayItemIndex, path);
 					}
 					done(err);
 					return;
@@ -512,7 +515,7 @@ Schema.verifier = {
 				}
 
 				validationError || (validationError = {});
-				done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value, null/*, schema.path*/));
+				done(new Schema.ValidationResultError(validationError.ruleName, validationError.ruleParams, value, null, path));
 			});
 		}, done);
 	},
@@ -535,7 +538,7 @@ Schema.verifier = {
 		}
 
 		iterate.array(value, function (value, index, done) {
-			that.validateFields(schema, value, options, path, done);
+			that.validateFields(schema, value, options, path+SEP+index, done);
 		}, done);
 	},
 
@@ -554,7 +557,7 @@ Schema.verifier = {
 			return;
 		}
 
-		done(new Schema.ValidationResultError('type', schema.isArray ? 'array' : 'object', value, null/*, schema.path*/));
+		done(new Schema.ValidationResultError('type', schema.isArray ? 'array' : 'object', value, null, path));
 	},
 
 	/**
@@ -574,7 +577,7 @@ Schema.verifier = {
 			this.checkNestedFields
 		], function (method, _2, done) {
 			method.call(that, schema, value, options, path, done);
-		}, done);
+		});
 	},
 
 	/**
@@ -589,7 +592,7 @@ Schema.verifier = {
 	checkNestedFields: function (schema, value, options, path, done) {
 		var that = this;
 		iterate.object(schema.fields, function (fieldSchema, name, done) {
-			that.verifySchema(fieldSchema, value[name], options, path, done);
+			that.verifySchema(fieldSchema, value[name], options, path+SEP+name, done);
 		}, done);
 	},
 
@@ -613,7 +616,7 @@ Schema.verifier = {
 			return;
 		}
 
-		done(new Schema.ValidationResultError('type', 'object', value, null/*, schema.path*/));
+		done(new Schema.ValidationResultError('type', 'object', value, null, path));
 	},
 
 	/**
@@ -640,7 +643,7 @@ Schema.verifier = {
 			return;
 		}
 
-		done(new Schema.ValidationResultError('available_fields', _.keys(schema.fields), value, null/*, schema.path*/));
+		done(new Schema.ValidationResultError('available_fields', _.keys(schema.fields), value, null, path));
 	}
 };
 
@@ -746,13 +749,13 @@ extend(Schema.ValidationError, Error);
  * @param {?*} ruleParams - params of rule, that failed
  * @param {*} value - value, that failed
  * @param {?Number} [arrayItemIndex=null] - index of array, default null
- * @param {?Array} [path] -  schema path
+ * @param {?String} path -  schema path
  * @property {String} type
  * @property {String} name
  * @property {String} ruleName
  * @property {?Number} arrayItemIndex
- * @property {*} ruleParams
- * @property {*} value
+ * @property {*} ruleParams - clone
+ * @property {*} value - clone
  * @property {?Array} path
  * @returns {Schema.ValidationResultError}
  */
@@ -761,16 +764,26 @@ Schema.ValidationResultError = function ValidationResultError (ruleName, rulePar
 		return new Schema.ValidationResultError(ruleName, ruleParams, value, arrayItemIndex, path);
 	}
 
-	path       = _.clone(path || []);
-	value      = _.cloneDeep(value);
+	value = _.cloneDeep(value);
 	ruleParams = _.cloneDeep(ruleParams);
+	arrayItemIndex = _.isNumber(arrayItemIndex) ? arrayItemIndex : null;
+
+	var pathArray;
+	if (_.isString(path) && path.length) {
+		if (arrayItemIndex != null) {
+			path += SEP + arrayItemIndex;
+		}
+		pathArray = path.replace(SEP_EXP_FIRST, '').split(SEP);
+	} else {
+		pathArray = [];
+	}
 
 	Schema.ValidationError.call(this, ruleName, ruleParams);
 	this.name = 'ValidationResultError';
 	this.type = this.name;
 	this.value = value;
-	this.arrayItemIndex = _.isNumber(arrayItemIndex) ? arrayItemIndex : null;
-	this.path = path;
+	this.arrayItemIndex = arrayItemIndex;
+	this.path = pathArray;
 
 	return this;
 };
