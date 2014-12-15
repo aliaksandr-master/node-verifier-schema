@@ -1,6 +1,6 @@
 {
   "name": "node-verifier-schema",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "verify JSON plain object schema. api input verifier",
   "main": "index.js",
   "directories": {
