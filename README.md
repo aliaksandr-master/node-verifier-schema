@@ -553,11 +553,12 @@ Schema.ValidationError('required', true);
 new Schema.ValidationError('required', true, null);
 ```
 
-### Schema.ValidationResultError(ruleName, ruleParams, value[, arrayItemIndex])
+### Schema.ValidationResultError(ruleName, ruleParams, value,[ arrayItemIndex],[path])
 **ruleName**: `String` - required - rule name that was failed.<br>
 **ruleParams**: `Mixed|Null` - required - any parameters for help user understand where mistake.<br>
 **value**: `Mixed` - value that caused an error.<br>
-**arrayItemIndex**: `Null|Number` - optional - item's index that caused an error.
+**arrayItemIndex**: `Null|Number` - optional - item's index that caused an error. <br>
+**path**: `Null|String` - optional - path (json selector) to value that fail the validation. for example /hello/world/0/foo/3/bar - this will convert to array ['hello']['world']['0']['foo']['3']['bar']. if `arrayItemIndex` was specified - it will concat with path end
 
 Schema.ValidationResultError extends Schema.ValidationError.
 ```js
@@ -565,22 +566,22 @@ new Schema.ValidationResultError('required', true, value, null);
 ```
 
 ### System predefined errors:
-1. Schema.ValidationResultError('type', 'array', `value`). <br>
+1. Schema.ValidationResultError('type', 'array', `value`, `path`). <br>
     returned if `schema.isArray` was not compatible with value type (`isArray` = true, but value is not Array). <br>
-    { ruleName: 'type', ruleParams: 'array', value: `value`, arrayItemIndex: null }.
+    { ruleName: 'type', ruleParams: 'array', value: `value`, arrayItemIndex: null, path: `path` }.
 
-2. Schema.ValidationResultError('type', 'object', `value`). <br>
+2. Schema.ValidationResultError('type', 'object', `value`, null, `path`). <br>
     returned if `schema.isArray` was not compatible with value type (`isArray` = false, but value is not Object). <br>
-    { ruleName: 'type', ruleParams: 'array', value: `value`, arrayItemIndex: null }. <br>
+    { ruleName: 'type', ruleParams: 'array', value: `value`, arrayItemIndex: null, path: `path` }. <br>
 
-3. Schema.ValidationResultError('available_fields', _.keys(schema.fields), `value`, null). <br>
+3. Schema.ValidationResultError('available_fields', `fields`, `value`, null, `path`). <br>
     returned if value object has field, that not specified in schema. <br>
-    { ruleName: 'available_fields', ruleParams: _.keys(schema.fields), value: `value`, arrayItemIndex: null }. <br>
+    { ruleName: 'available_fields', ruleParams: `fields`, value: `value`, arrayItemIndex: null, path: `path` }. <br>
     You can ignore this error, if set `options.ignoreExcess`=true.
 
-4. Schema.ValidationResultError('required', true, `value`, null). <br>
+4. Schema.ValidationResultError('required', true, `value`, null, `path`). <br>
     returned if value object is undefined and flag `schema.isRequired`=true. <br>
-    { ruleName: 'required', ruleParams: true, value: `value`, arrayItemIndex: null }.
+    { ruleName: 'required', ruleParams: true, value: `value`, arrayItemIndex: null, path: `path` }.
 
 arrayItemIndex - specified if this object in array and value is item of array.
-
+path - json selector - address to current mistake value  (Array).

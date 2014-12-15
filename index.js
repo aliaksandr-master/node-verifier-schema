@@ -777,9 +777,13 @@ Schema.ValidationResultError = function ValidationResultError (ruleName, rulePar
 		return new Schema.ValidationResultError(ruleName, ruleParams, value, arrayItemIndex, path);
 	}
 
+	arrayItemIndex = _.isNumber(arrayItemIndex) && !_.isNaN(arrayItemIndex) ? arrayItemIndex : null;
+	if (arrayItemIndex != null && _.isArray(value)) {
+		value = value[arrayItemIndex];
+	}
+
 	value = _.cloneDeep(value);
 	ruleParams = _.cloneDeep(ruleParams);
-	arrayItemIndex = _.isNumber(arrayItemIndex) ? arrayItemIndex : null;
 
 	var pathArray;
 	if (_.isString(path) && path.length) {
