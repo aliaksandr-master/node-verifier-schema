@@ -13,7 +13,7 @@ var extend = require('./lib/extend');
 
 /**
  * @callback verifierDone
- * @param {?Error|Boolean|Schema.ValidationError|Schema.ValidationResultError} error - for interrupt of validation stream (plain true), or value validation error, or Error of logic
+ * @param {?Error|Boolean|Schema.ValidationError|Schema.ValidationResultError} error - to interrupt validation stream (plain true), or value validation error, or Error of logic
  * */
 
 /**
@@ -203,7 +203,7 @@ Schema.prototype = {
 	},
 
 	/**
-	 * add new nested schema by construct
+	 * add new nested schema with construct
 	 *
 	 * @method
 	 * @this {Schema}
@@ -293,7 +293,7 @@ Schema.prototype = {
 	 *
 	 * @method
 	 * @this {Schema}
-	 * @param {*} value - value for check.
+	 * @param {*} value - value to check.
 	 * @param {?Object} [options] - validation options, default is plain object.
 	 * @param {?validator} [options.validator] - custom validation mapper
 	 * @param {verifyCallback} done - done-callback.
@@ -372,8 +372,8 @@ Schema.prototype = {
  *
  * @static
  * @method
- * @param {!Schema} schema for validate.
- * @param {*} value - value for check.
+ * @param {!Schema} schema to validate.
+ * @param {*} value - value to check.
  * @param {!verifyCallback} done - done-callback.
  * @param {?Object} [options] - validation options, default is plain object.
  * @param {validator} [options.validator] - custom validation mapper
@@ -416,8 +416,8 @@ Schema.verifier = {
 	 * verify object
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -438,8 +438,8 @@ Schema.verifier = {
 	 * check isRequired flag with value
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -462,8 +462,8 @@ Schema.verifier = {
 	 * check self validation of value
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -524,8 +524,8 @@ Schema.verifier = {
 	 * verify inner object
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -546,8 +546,8 @@ Schema.verifier = {
 	 * check is array flag
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -564,8 +564,8 @@ Schema.verifier = {
 	 * verify inner fields
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -597,8 +597,8 @@ Schema.verifier = {
 	 * check nested fields
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -613,8 +613,8 @@ Schema.verifier = {
 	 * check exists of fields and correct data type
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -636,8 +636,8 @@ Schema.verifier = {
 	 * find the excess fields, that not defined
 	 *
 	 * @method
-	 * @param {Schema} schema for validate.
-	 * @param {*} value - value for check
+	 * @param {Schema} schema to validate.
+	 * @param {*} value - value to check
 	 * @param {Object} options - validation options
 	 * @param {verifierDone} done - done-callback
 	 */
@@ -666,7 +666,7 @@ var register = {};
  * Schema register
  *
  * @static
- * @param {!String} name - name for register.
+ * @param {!String} name - name to register.
  * @param {!Schema} schema - schema for register
  * @throws {TypeError} If invalid name type
  * @throws {TypeError} If schema name type
@@ -694,7 +694,7 @@ Schema.register = function (name, schema) {
  * get registered schema
  *
  * @static
- * @param {String} name - name for register.
+ * @param {String} name - name to register.
  * @param {?Boolean} [strict=true] - strict mode (throw ReferenceError)
  * @throws {TypeError} If invalid name type
  * @throws {ReferenceError} If schema was not registered before
@@ -751,16 +751,16 @@ Schema.ValidationError = function ValidationError (ruleName, ruleParams, arrayIt
 extend(Schema.ValidationError, Error);
 
 /**
- * Create instance of Schema.ValidationError. Error object for info about miss value
+ * Create instance of Schema.ValidationError. Error object for info about failed value
  *
  * @constructor
  * @static
  * @extends Schema.ValidationError
  * @this {Schema.ValidationResultError}
  * @class Schema.ValidationResultError
- * @param {String} ruleName - rule name, that failed
- * @param {?*} ruleParams - params of rule, that failed
- * @param {*} value - value, that failed
+ * @param {String} ruleName - name of the failed rule
+ * @param {?*} ruleParams - params of the failed rule
+ * @param {*} value - value that failed
  * @param {?Number} [arrayItemIndex=null] - index of array, default null
  * @param {?String} path -  schema path
  * @property {String} type

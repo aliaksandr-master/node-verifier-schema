@@ -18,11 +18,11 @@ var Schema = require('node-verifier-schema');
 
 ## Features
 - Declarative approach for schema building.
-- Several types for build of schema object.
+- Several schema object build types.
 - Built-in register for schemas. You can use schema aliases.
-- Does not impose restriction on validator. You can use any framework (or its wrapper), that implement interface of schema.validator (this is easy).
+- Does not impose restrictions on a validator. You can use any framework (or its wrapper) that implements interface of schema.validator (this is easy).
 - Correct nesting of schemas and fields.
-- You may use shema constructor as function (returned Schema instance anyway).
+- You may use shema constructor as function (returns Schema instance anyway).
 - Support of async function call for value validation.
 - Save your schema in YAML format and load by schema-loader.
 - Errors without message - you can use for standard api results and multi-language api.
@@ -135,8 +135,8 @@ var sh1 = new Schema('Hello').object(function () {
 This library has no own validator. You can use any lib for validation.<br>
 All fields for schema can have many items of validation. Method validate can be called many times, all items will be added into `validations` array; All `validation` join as array (not replaced). If `validation` will be a array - this array concat with previous validations array.<br>
 If you use the function type of validation - this function must have two required arguments (first - `Mixed` - value to validate, second - `function(err)`  - callback function for returning the result of validation. first argument `err` - must be specified as Schema.ValidationError({string} ruleName [, {*}ruleParams]) or instance of Error).<br>
-By use experience we can say next. For usability validations should have type String / Object / Boolean / Number / Array. Not Function, because if you use function for validation in schema declaration - you cant save this schema in file, grows the difficulty of detect errors in this validation from outside.<br>
-Better Use the abstract `validator` in `verify` method for convert params into validation function.
+From our experience, you can achieve better usability in case of String / Object / Boolean / Number / Array type validaitons. Not Function, because if you use function for validation in schema declaration - you cant save this schema as а file thus validation error detection from outside becomes more complicated.<br>
+It's better to use the abstract `validator` in `verify` method to convert params into validation function.
 ```js
 var sh1 = new Schema();
 sh1.optional();
@@ -195,7 +195,7 @@ sh2.verify(value, { validator: myValidator }, function (err2, isValid, validatio
 **nested**: `Schema|Function|String`.<br>
 
 If `nested` is instance of `Schema` or `String` - all inside fields of this schema became own parent schema (by cloning).<br>
-If `nested` is `Function` - You can build inner fields bu function. That build-function has two arguments (first - this.required, second - this.optional) for compact declaration of this schema field.<br>
+If `nested` is `Function` - You can build inner fields with a function. the build-function has two arguments (first - this.required, second - this.optional) for compact declaration of this schema field.<br>
 You can call this method once, else throws an Error.
 ```js
 var sh1 = new Schema().object(function (r, o) {
@@ -235,10 +235,10 @@ _.isEqual(testSc, sh1); // true
 #### Schema::array( [ nested ] )
 **nested**: `Boolean|Function|String|Schema`.
 
-If `nested` value will be `Function` or `String` or `Schema` - behavior as Schema::object. But this method add the flag `isArray` to the schema.<br>
-If `nested` value will be `Boolean` or not specified (Nullable) - add (remove) flag of array to this schema.<br>
-`isArray` flag say validator how value can be processed. By default (isArray = false) value must be object. If isArray = true - value must be array. If isArray will not compatible with value type - you will have ValidationError('type', 'array', value) or ValidationError('type', 'object', value) in dependence of `isArray`.<br>
-if `isArray` = true and nested fields was specified, then validator will be process all value items as specified nested fields, if any item will be invalid - will be returned the validation error.
+If `nested` value will be `Function` or `String` or `Schema` - behaves as Schema::object. But this method adds the flag `isArray` to the schema.<br>
+If `nested` value will be `Boolean` or not specified (Nullable) - adds (removes) flag of array to this schema.<br>
+`isArray` flag says validator how value can be processed. By default (isArray = false) value must be object. If isArray = true - value must be array. If isArray is not compatible with value type - you get ValidationError('type', 'array', value) or ValidationError('type', 'object', value) in dependence of `isArray`.<br>
+if `isArray` = true and nested fields were specified validator will process all value items as specified nested fields, if any item will be invalid - the validator error will be returned.
 ```js
 var sch1 = Schema();
 
@@ -251,7 +251,7 @@ sch1.array(sh1);
 // remove flag
 sch1.array(false);
 ```
-If you use in schema simple array (without fields) and you want to validate each item of value - you should create the validation for value. For example
+If you use simple array (without fields) in schema and you want to validate each item of value - you should create the validation for value. For example
 ```js
 var sch1 = new Schema().array().validate(function(value, done){
     var itemIndex;
@@ -293,11 +293,11 @@ _.isEqual(sc1, sc2); // true
 **options**: `Object` - optional.<br>
 **callback**: `Function`.
 
-Runtime validation of value. compare with schema and inner validations.<br>
-This method must have fast process speed. This method is called synchronously, but if any validation function has async call - not a problem. Async validation call support from the box. (you have a callback in second argument).<br>
-Options object has a `validator` function, by default this function not specified.<br>
+Runtime validation of value. Compare with schema and inner validations.<br>
+This method must have fast process speed. This method is called synchronously, but it's not a problem if any validation function has async call. Async validation call is supported out of the box. (you have a callback as a second argument).<br>
+Options object has a `validator` function, by default this function is not specified.<br>
 
-**options.validator(validations [, options])** - function, that prepare specified validations. must return `function(value, doneCallback)` or array of functions.<br>
+**options.validator(validations [, options])** - function that prepares specified validations. Must return `function(value, doneCallback)` or array of functions.<br>
 **options**: `Object` - options.<br>
 **validations**: `Array` - array of validations.<br>
 see: `Schema::validation`
@@ -347,7 +347,7 @@ sc1.required('some');
 **validate**: `Mixed` - optional.<br>
 
 Create optional field.<br>
-If called without arguments - remove required flag.
+If called without arguments - removes required flag.
 ```js
 var sc1 = Schema();
 sc1.field('some').optional();
@@ -371,14 +371,14 @@ var schema2 = Schema.get('nameForThisSchema');
 ```
 Function schemaLoader has two params:<br>
 schemaLoader(absFilePath [, name]).<br>
-absFilePath: `String` - absolute path of file that need to load. Must have js, yaml or yml file extension as default.<br>
-name: `String` - optional - name for register this schema in Schema.register.<br>
+absFilePath: `String` - absolute path to file that needs to be loaded. Must have js, yaml or yml file extension as default.<br>
+name: `String` - optional - name to register this schema in Schema.register.<br>
 
 ### YAML full syntax:
-schema declaration must start from `schema`, and you can add `[]` for mark this schema as array type, and `?` as optional<br>
-inside fields should not named as `=`, has `[]` and `?` flags as in schema declaration<br>
+schema declaration must start with `schema`, and you can add `[]` to mark this schema as array type, and `?` as optional<br>
+inside fields should not be named as `=`, has `[]` and `?` flags as in schema declaration<br>
 attribute name `=` means validation<br>
-validation must be array, inside items of validations you may specify value as you want (inside array, hash, string and so on)
+validation must be array, inside validation items you may specify value as you want (inside array, hash, string and so on)
 ```yaml
 ---
 schema: # required attribute of schema declaration, if this is array - add '[]', if optional - add '?' on key end
@@ -506,10 +506,10 @@ var schema = new Schema().validate('type object').object(function (r, o) {
 ```
 
 ## Errors
-all errors has three arguments:<br>
-**ruleName**: `String` - required - rule name that was failed.<br>
-**ruleParams**: `Mixed` - any parameters for help user understand where mistake.<br>
-**arrayItemIndex**: `Null|Number` - item's index, that caused an error.
+all errors have three arguments:<br>
+**ruleName**: `String` - required - rule name that failed.<br>
+**ruleParams**: `Mixed` - all parameters to help user understand where mistake is.<br>
+**arrayItemIndex**: `Null|Number` - failed item's index.
 
 For ruleName you should use a valid case name.
 
@@ -518,12 +518,12 @@ For example:<br>
 ruleName='excess_field'  with ruleName = $fileName ($fieldName - field, that was excess)<br>
 **good**:<br>
 ruleName='available_fields' with ruleParams=['first_name', 'last_name'...] <br>
-you should put available fields for this case.
+you should put available fields in this case.
 
-This approach create one way for process validation errors. <br>
-And in future you will not have problems with extends your API and schema.<br>
+This approach creates one way to process validation errors. <br>
+And in future you will not have problems with extension of your API and schema.<br>
 And this formulation (in positive) get more information for API user
-(in this example you get all available values of field names and can modify correctly in next try).
+(in this example you get all available values of field names and can modify them correctly next time).
 
 This system of validation errors has no end message - for multi-language support.
 You can create simple function for mapping ValidationResultError to user-friendly message (with current user language).
@@ -540,9 +540,9 @@ var messages = {
 ```
 
 ### Schema.ValidationError(ruleName [, ruleParams[, arrayItemIndex]])
-**ruleName**: `String` - required - rule name that was failed.<br>
-**ruleParams**: `Mixed` - optional - any parameters for help user understand where mistake.<br>
-**arrayItemIndex**: `Null|Number` - optional - item's index, that caused an error.<br>
+**ruleName**: `String` - required - rule name that failed.<br>
+**ruleParams**: `Mixed` - optional - all parameters to help user understand where mistake is .<br>
+**arrayItemIndex**: `Null|Number` - optional - failed item's index.<br>
 
 Schema.ValidationError extends Error.<br>
 Destination: for custom validations.<br>
@@ -554,11 +554,11 @@ new Schema.ValidationError('required', true, null);
 ```
 
 ### Schema.ValidationResultError(ruleName, ruleParams, value,[ arrayItemIndex],[path])
-**ruleName**: `String` - required - rule name that was failed.<br>
-**ruleParams**: `Mixed|Null` - required - any parameters for help user understand where mistake.<br>
+**ruleName**: `String` - required - rule name that failed.<br>
+**ruleParams**: `Mixed|Null` - required - all parameters to help user understand where mistake.<br>
 **value**: `Mixed` - value that caused an error.<br>
-**arrayItemIndex**: `Null|Number` - optional - item's index that caused an error. <br>
-**path**: `Null|String` - optional - path (json selector) to value that fail the validation. for example /hello/world/0/foo/3/bar - this will convert to array ['hello']['world']['0']['foo']['3']['bar']. if `arrayItemIndex` was specified - it will concat with path end
+**arrayItemIndex**: `Null|Number` - optional - failed item's index. <br>
+**path**: `Null|String` - optional - path (json selector) to value that failed the validation. for example /hello/world/0/foo/3/bar - this will convert to array ['hello']['world']['0']['foo']['3']['bar']. if `arrayItemIndex` was specified - it will concat with path end
 
 Schema.ValidationResultError extends Schema.ValidationError.
 ```js
