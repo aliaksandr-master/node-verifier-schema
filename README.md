@@ -3,6 +3,7 @@
 [![Dependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema.svg?style=flat-square)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema)
 [![devDependency Status](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema/dev-status.svg?style=flat-square)](https://david-dm.org/aliaksandr-pasynkau/node-verifier-schema#info=devDependencies)
 [![Build Status](https://travis-ci.org/aliaksandr-pasynkau/node-verifier-schema.svg?branch=master&style=flat-square)](https://travis-ci.org/aliaksandr-pasynkau/node-verifier-schema)
+[![Coverage Status](https://img.shields.io/coveralls/aliaksandr-pasynkau/node-verifier-schema.svg?style=flat-square)](https://coveralls.io/r/aliaksandr-pasynkau/node-verifier-schema?branch=master)
 
 ## Destination:
 - validate nested in object (JSON) fields.
