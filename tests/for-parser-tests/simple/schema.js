@@ -1,6 +1,6 @@
 "use strict";
 
-var Schema = require('../../../index');
+var Schema = require('../../_lib/schema');
 
 module.exports = new Schema().validate('type object').object(function (r, o) {
 	r('fio', 'type object').object(function (r, o) {

@@ -1,7 +1,7 @@
 "use strict";
 
 var _ = require('lodash');
-var Schema = require('../index');
+var Schema = require('./_lib/schema');
 var async = require('async');
 
 exports['Simple Usage'] = {

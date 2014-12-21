@@ -1,6 +1,6 @@
 "use strict";
 
-var Schema = require('../index');
+var Schema = require('./_lib/schema');
 
 module.exports = {
 	'instance of Error': function (test) {

@@ -1,7 +1,7 @@
 "use strict";
 
-var loader = require('../load');
-var Schema = require('../index');
+var loader = require('./_lib/loader');
+var Schema = require('./_lib/schema');
 
 var schema = new Schema().validate('type object').object(function (r, o) {
 	r('fio', 'type object').object(function (r, o) {

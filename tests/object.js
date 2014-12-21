@@ -1,7 +1,7 @@
 "use strict";
 
-var Schema = require('../index');
-var tester = require('./lib/tester');
+var Schema = require('./_lib/schema');
+var tester = require('./_lib/tester');
 
 exports.schema = {
 	simple: function (test) {

@@ -1,6 +1,6 @@
 "use strict";
 
-var extend = require('../lib/extend');
+var extend = require('../lib/utils/extend');
 
 module.exports = {
 	'auto': function (test) {
