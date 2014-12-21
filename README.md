@@ -62,7 +62,7 @@ var value = {};
 sc1.verify(value, function (err, isValid, validationError) {
     console.log(err); // null - js error
     console.log(isValid); // false - validation result
-    console.log(validationError); // Schema.ValidationError { value: {}, ruleName: 'required', ruleParams: null, path: [ 'first_name' ] } - first error of validation
+    console.log(validationError); // Schema.ValidationError { value: {}, rule: 'required', ruleParams: null, path: [ 'first_name' ] } - first error of validation
 });
 
 var value = { first_name: 'hello', last_name: 'world' }
@@ -136,7 +136,7 @@ var sh1 = new Schema('Hello').object(function () {
 
 This library has no own validator. You can use any lib for validation.<br>
 All fields for schema can have many items of validation. Method validate can be called many times, all items will be added into `validations` array; All `validation` join as array (not replaced). If `validation` will be a array - this array concat with previous validations array.<br>
-If you use the function type of validation - this function must have two required arguments (first - `Mixed` - value to validate, second - `function(err)`  - callback function for returning the result of validation. first argument `err` - must be specified as Schema.ValidationError({string} ruleName [, {*}ruleParams]) or instance of Error).<br>
+If you use the function type of validation - this function must have two required arguments (first - `Mixed` - value to validate, second - `function(err)`  - callback function for returning the result of validation. first argument `err` - must be specified as Schema.ValidationError({string} rule [, {*}ruleParams]) or instance of Error).<br>
 From our experience, you can achieve better usability in case of String / Object / Boolean / Number / Array type validaitons. Not Function, because if you use function for validation in schema declaration - you cant save this schema as а file thus validation error detection from outside becomes more complicated.<br>
 It's better to use the abstract `validator` in `verify` method to convert params into validation function.
 ```js
@@ -187,7 +187,7 @@ sh2.verify(value, { validator: myValidator }, function (err2, isValid, validatio
     console.log(err); // null
     console.log(isValida); // false
     console.log(validationError); // [object Object]
-    console.log(validationError.ruleName); // 'contains'
+    console.log(validationError.rule); // 'contains'
     console.log(validationError.ruleParams); // [1, 2, 3]
     console.log(validationError.value); // '123'
 });
@@ -274,7 +274,7 @@ var sch1 = new Schema().array().validate(function(value, done){
 sch1.verify(["1" ,"2" ,"3", 4], function (err, isValid, validationError) {
     console.log(err); // null
     console.log(isValid); // false
-    console.log(validationError); // Schema.ValidationResultError => { ruleName: 'type', ruleParams: 'string', index: 3, value: ["1" ,"2" ,"3", 4] }
+    console.log(validationError); // Schema.ValidationResultError => { rule: 'type', ruleParams: 'string', index: 3, value: ["1" ,"2" ,"3", 4] }
 });
 ```
 
@@ -509,17 +509,17 @@ var schema = new Schema().validate('type object').object(function (r, o) {
 
 ## Errors
 all errors have three arguments:<br>
-**ruleName**: `String` - required - rule name that failed.<br>
+**rule**: `String` - required - rule name that failed.<br>
 **ruleParams**: `Mixed` - all parameters to help user understand where mistake is.<br>
 **index**: `Null|Number` - failed item's index.
 
-For ruleName you should use a valid case name.
+For rule you should use a valid case name.
 
 For example:<br>
 **wrong**:<br>
-ruleName='excess_field'  with ruleName = $fileName ($fieldName - field, that was excess)<br>
+rule='excess_field'  with rule = $fileName ($fieldName - field, that was excess)<br>
 **good**:<br>
-ruleName='available_fields' with ruleParams=['first_name', 'last_name'...] <br>
+rule='available_fields' with ruleParams=['first_name', 'last_name'...] <br>
 you should put available fields in this case.
 
 This approach creates one way to process validation errors. <br>
@@ -531,7 +531,7 @@ This system of validation errors has no end message - for multi-language support
 You can create simple function for mapping ValidationResultError to user-friendly message (with current user language).
 ```js
 var messages = {
-    // ruleName -> template
+    // rule -> template
     required: function (validationError, options) {
         return 'field must be required';
     },
@@ -541,8 +541,8 @@ var messages = {
 };
 ```
 
-### Schema.ValidationError(ruleName [, ruleParams[, index]])
-**ruleName**: `String` - required - rule name that failed.<br>
+### Schema.ValidationError(rule [, ruleParams[, index]])
+**rule**: `String` - required - rule name that failed.<br>
 **ruleParams**: `Mixed` - optional - all parameters to help user understand where mistake is .<br>
 **index**: `Null|Number` - optional - failed item's index.<br>
 
@@ -555,8 +555,8 @@ Schema.ValidationError('required', true);
 new Schema.ValidationError('required', true, null);
 ```
 
-### Schema.ValidationResultError(ruleName, ruleParams, value,[ index],[path])
-**ruleName**: `String` - required - rule name that failed.<br>
+### Schema.ValidationResultError(rule, ruleParams, value,[ index],[path])
+**rule**: `String` - required - rule name that failed.<br>
 **ruleParams**: `Mixed|Null` - required - all parameters to help user understand where mistake.<br>
 **value**: `Mixed` - value that caused an error.<br>
 **index**: `Null|Number` - optional - failed item's index. <br>
@@ -570,20 +570,20 @@ new Schema.ValidationResultError('required', true, value, null);
 ### System predefined errors:
 1. Schema.ValidationResultError('type', 'array', `value`, `path`). <br>
     returned if `schema.isArray` was not compatible with value type (`isArray` = true, but value is not Array). <br>
-    { ruleName: 'type', ruleParams: 'array', value: `value`, index: null, path: `path` }.
+    { rule: 'type', ruleParams: 'array', value: `value`, index: null, path: `path` }.
 
 2. Schema.ValidationResultError('type', 'object', `value`, null, `path`). <br>
     returned if `schema.isArray` was not compatible with value type (`isArray` = false, but value is not Object). <br>
-    { ruleName: 'type', ruleParams: 'array', value: `value`, index: null, path: `path` }. <br>
+    { rule: 'type', ruleParams: 'array', value: `value`, index: null, path: `path` }. <br>
 
 3. Schema.ValidationResultError('available_fields', `fields`, `value`, null, `path`). <br>
     returned if value object has field, that not specified in schema. <br>
-    { ruleName: 'available_fields', ruleParams: `fields`, value: `value`, index: null, path: `path` }. <br>
+    { rule: 'available_fields', ruleParams: `fields`, value: `value`, index: null, path: `path` }. <br>
     You can ignore this error, if set `options.ignoreExcess`=true.
 
 4. Schema.ValidationResultError('required', true, `value`, null, `path`). <br>
     returned if value object is undefined and flag `schema.isRequired`=true. <br>
-    { ruleName: 'required', ruleParams: true, value: `value`, index: null, path: `path` }.
+    { rule: 'required', ruleParams: true, value: `value`, index: null, path: `path` }.
 
 index - specified if this object in array and value is item of array.
 path - json selector - address to current mistake value  (Array).

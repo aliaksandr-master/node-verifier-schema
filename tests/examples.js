@@ -42,7 +42,7 @@ exports['Simple Usage'] = {
 		sh1.verify(value, function (err, isValid, vError) {
 			test.ok(!isValid);
 
-			test.equal(vError.ruleName, 'required');
+			test.equal(vError.rule, 'required');
 			test.strictEqual(vError.ruleParams, true);
 			test.strictEqual(vError.value, undefined);
 			test.deepEqual(vError.path, ['first_name']);
@@ -93,7 +93,7 @@ exports['Simple Usage'] = {
 
 		sh1.verify(value, function (err, isValid, vError) {
 			test.ok(!isValid);
-			test.equal(vError.ruleName, 'available_fields');
+			test.equal(vError.rule, 'available_fields');
 			test.deepEqual(vError.ruleParams, _keys);
 			test.deepEqual(vError.value, value);
 			test.deepEqual(vError.path, []);
@@ -200,7 +200,7 @@ exports['Object Schema Building: array'] = {
 			validationError || (validationError = {});
 			test.equal(err, null);
 			test.ok(!isValid);
-			test.strictEqual(validationError.ruleName, 'type');
+			test.strictEqual(validationError.rule, 'type');
 			test.strictEqual(validationError.ruleParams, 'string');
 			test.strictEqual(validationError.index, 3);
 			test.deepEqual(validationError.value, 4);
@@ -320,7 +320,7 @@ exports['Object Schema Building: validate'] = {
 			sh2.verify(value, { validator: myValidator }, function (err2, isValid, validationError) {
 				test.ok(!isValid);
 				test.equal(err2, null);
-				test.strictEqual(validationError.ruleName, 'contains');
+				test.strictEqual(validationError.rule, 'contains');
 				test.deepEqual(validationError.ruleParams, validate);
 				test.deepEqual(validationError.value, value);
 				test.done(err1||err2);
