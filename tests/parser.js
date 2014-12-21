@@ -39,8 +39,8 @@ module.exports = {
 		test.done();
 	},
 	//
-	//'json': function (test) {
-	//	test.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema.js'));
-	//	test.done();
+	//'json': function (tests) {
+	//	tests.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema.js'));
+	//	tests.done();
 	//}
 };
