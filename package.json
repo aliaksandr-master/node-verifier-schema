@@ -4,10 +4,15 @@
   "description": "verify JSON plain object schema. api input verifier",
   "main": "index.js",
   "directories": {
-    "test": "test"
+    "test": "tests"
   },
   "scripts": {
-    "test": "grunt jshint && nodeunit tests/"
+    "test_jshint": "node_modules/.bin/grunt jshint",
+    "test_unit": "node_modules/.bin/nodeunit tests/",
+    "test_unit_cov": "NODEVERIFIERSCHEMA_COV=1 node_modules/.bin/nodeunit --reporter=lcov tests/",
+    "jscov": "node_modules/.bin/jscoverage lib",
+    "test": "npm run test_jshint && npm run test_unit",
+    "coveralls": "npm run jscov && npm run test_unit_cov | node_modules/.bin/coveralls"
   },
   "repository": {
     "type": "git",
@@ -37,11 +42,14 @@
   },
   "devDependencies": {
     "async": "~0.9.0",
-    "colors": "^1.0.3",
+    "colors": "~1.0.3",
     "nodeunit": "~0.9.0",
     "grunt": "~0.4.5",
     "grunto": "~1.2.1",
     "grunt-contrib-jshint": "~0.10.0",
+    "jscoverage": "~0.5.9",
+    "grunt-cli": "~0.1.13",
+    "coveralls": "~2.11.2",
     "node-verifier": "*"
   }
 }

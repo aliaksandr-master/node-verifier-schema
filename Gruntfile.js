@@ -7,7 +7,8 @@ module.exports = require('grunto')(function(grunt) {
 			options: grunt.file.readJSON('.jshintrc'),
 			all: [
 				'**/*.{js,json}',
-				'!node_modules/**/*.{js,json}'
+				'!node_modules/**/*.{js,json}',
+				'!lib-cov/**/*.{js,json}'
 			]
 		}
 	};
