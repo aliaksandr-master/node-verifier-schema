@@ -17,7 +17,14 @@ var tester = function (schema, testCase, objectForValidate) {
 				});
 			}
 
-			test.strictEqual(isValid, testCase.expect, 'invalid result ' + inspect(err) + inspect(isValid) + inspect(validationError));
+			var res = _.isEqual(isValid, testCase.expect);
+
+			if (!res) {
+				console.log('invalid result ' + inspect(err) + inspect(isValid) + inspect(validationError));
+			}
+
+			test.ok(res);
+
 			test.done(err);
 		});
 	};
