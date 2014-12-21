@@ -202,7 +202,7 @@ exports['Object Schema Building: array'] = {
 			test.ok(!isValid);
 			test.strictEqual(validationError.ruleName, 'type');
 			test.strictEqual(validationError.ruleParams, 'string');
-			test.strictEqual(validationError.arrayItemIndex, 3);
+			test.strictEqual(validationError.index, 3);
 			test.deepEqual(validationError.value, 4);
 			test.done();
 		});
