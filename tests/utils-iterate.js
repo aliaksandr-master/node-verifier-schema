@@ -21,6 +21,19 @@ module.exports = {
 		});
 	},
 
+	'iterate array - not array': function (test) {
+		var len = 0;
+		var arr = null;
+		var count = 0;
+		iterate.array(arr, function (value, index, done) {
+			count++;
+			done();
+		}, function (err) {
+			test.strictEqual(count, len);
+			test.done(err);
+		});
+	},
+
 	'iterate array - across all items of array': function (test) {
 		var len = arr.length;
 		var keys = _.keys(arr);
@@ -47,6 +60,19 @@ module.exports = {
 			test.strictEqual(count, len/2);
 			test.ok(typeof err === 'boolean');
 			test.done(err instanceof Error ? err : null);
+		});
+	},
+
+	'iterate object - not object': function (test) {
+		var obj = null;
+		var len = _.size(obj);
+		var count = 0;
+		iterate.object(obj, function (value, index, done) {
+			count++;
+			done();
+		}, function (err) {
+			test.strictEqual(len, count);
+			test.done(err);
 		});
 	},
 
