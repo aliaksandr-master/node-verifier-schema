@@ -91,8 +91,9 @@ exports['node-verifier'] = {
 	},
 	'invalid - type': function (test) {
 		verifier(3, function (err, isValid, validationError) {
+			console.log(validationError);
 			test.ok(validationError.rule === 'type');
-			test.ok(validationError.params === '[object object]');
+			test.ok(validationError.params === 'object');
 			test.ok(!isValid);
 			test.ok(_.isEqual(validationError.path, []));
 			test.done(err);
