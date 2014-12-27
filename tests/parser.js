@@ -24,11 +24,6 @@ var schema = new Schema().validate('type object').object(function (r, o) {
 });
 
 module.exports = {
-	'js': function (test) {
-		test.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema.js'));
-		test.done();
-	},
-
 	'yaml-full': function (test) {
 		test.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema-full.yml'));
 		test.done();
@@ -37,10 +32,5 @@ module.exports = {
 	'yaml-short': function (test) {
 		test.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema-short.yml'));
 		test.done();
-	},
-	//
-	//'json': function (tests) {
-	//	tests.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema.js'));
-	//	tests.done();
-	//}
+	}
 };
