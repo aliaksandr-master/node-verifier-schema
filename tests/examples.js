@@ -140,7 +140,41 @@ exports['Create Schema, Register'] = {
 	}
 };
 
-exports['Object Schema Building: attachTo'] = {
+exports['Object Schema Building: like'] = {
+	'example': function (test) {
+		var sh1 = new Schema().object(function () {
+			this.field('hello');
+			this.field('world');
+		});
+
+		var sh2 = new Schema().array(function () {
+			this.field('some');
+		});
+		sh2.field('myField').like(sh1);
+		// equal
+		var test1 = new Schema().array(function () {
+			this.field('some');
+			this.field('myField').object(function () {
+				this.field('hello');
+				this.field('world');
+			});
+		});
+		test.deepEqual(test1, sh2);
+
+		var sh3 = new Schema().array(function () {
+			this.field('some');
+		});
+		sh1.like(sh3);
+		var test2 = new Schema().array(function () {
+			this.field('hello');
+			this.field('world');
+			this.field('some');
+		});
+
+		test.deepEqual(test2, sh1);
+
+		test.done();
+	},
 	'typical': function (test) {
 		var sh1_1 = new Schema().object(function () {
 			this.field('hello');

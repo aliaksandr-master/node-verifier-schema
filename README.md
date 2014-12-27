@@ -102,32 +102,40 @@ Schema.get('mySchema123123123', false); // no error, because flag 'strict' was s
 
 ## Object Schema Building
 
-#### Schema::attachTo ( schema, name )
-**schema**: `Schema|String` - required.
+#### Schema::like ( schema [, processor] )
+**schema**: `Schema` - required.<br>
+**processor**: `function(schema)` - optional.<br>
+return: this field (schema)
 
-name: `Schema` - required - name of field for attach to object.<br>
-Attach schema object to 'parent' schema as field `name`.<br>
-Do not forget make clone if you use this schema for several fields at the same time!
+recursive clone `schema` properties and fields.<br>
+processor - for manual properties copying.
 ```js
 var sh1 = new Schema('Hello').object(function () {
     this.field('hello');
     this.field('world');
 });
+
 var sh2 = new Schema('World').array(function () {
     this.field('some');
 });
+sh2.field('myField').like(sh1);
+// equal
+new Schema('World').array(function () {
+   this.field('some');
+   this.field('myField').object(function () {
+       this.field('hello');
+       this.field('world');
+   });
+});
 
-sh2.attachTo(sh1, 'myField'); // attach schema
-// Equal
-sh2.clone().attachTo('Hello', 'myField'); // attach clone of schema
-
-// result equal:
-var sh1 = new Schema('Hello').object(function () {
+var sh3 = new Schema('World').array(function () {
+    this.field('some');
+});
+sh1.like(sh3);
+new Schema('Hello').array(function () {
     this.field('hello');
     this.field('world');
-    this.field('myField').array(function () {
-        this.field('some');
-    });
+    this.field('some');
 });
 ```
 
@@ -194,10 +202,9 @@ sh2.verify(value, { validator: myValidator }, function (err2, isValid, validatio
 ```
 
 #### Schema::object( nested )
-**nested**: `Schema|Function|String`.<br>
+**nested**: `Function`.<br>
 
-If `nested` is instance of `Schema` or `String` - all inside fields of this schema became own parent schema (by cloning).<br>
-If `nested` is `Function` - You can build inner fields with a function. the build-function has two arguments (first - this.required, second - this.optional) for compact declaration of this schema field.<br>
+You can build inner fields with a function. the build-function has two arguments (first - this.required, second - this.optional) for compact declaration of this schema field.<br>
 You can call this method once, else throws an Error.
 ```js
 var sh1 = new Schema().object(function (r, o) {
@@ -210,16 +217,16 @@ var sh4 = new Schema().object(function (r, o) {
     this.optional('world2');
 });
 
-var sc1 = new Schema('hello2').object(sh4);
+var sc1 = new Schema('hello2').like(sh4);
 sc1.field('some1');
 sc1.field('some2');
 
 var sc2 = new Schema();
-sc2.object(sc1); // add sh1
+sc2.like(sc1); // add sh1
 
 var sc3 = new Schema();
-sc3.object('hello2'); // add sc1
-sc3.attachTo(sh1, 'inner');
+sc3.like(Schema.get('hello2')); // add sc1
+sc1.field('inner').like(sh3);
 
 var testSc = new Schema().object(function (r, o) {
     r('my1');
@@ -235,20 +242,20 @@ _.isEqual(testSc, sh1); // true
 ```
 
 #### Schema::array( [ nested ] )
-**nested**: `Boolean|Function|String|Schema`.
+**nested**: `Boolean|Function`.
 
-If `nested` value will be `Function` or `String` or `Schema` - behaves as Schema::object. But this method adds the flag `isArray` to the schema.<br>
+If `nested` value will be `Function` - behaves as Schema::object. But this method adds the flag `isArray`=true to the schema.<br>
 If `nested` value will be `Boolean` or not specified (Nullable) - adds (removes) flag of array to this schema.<br>
 `isArray` flag says validator how value can be processed. By default (isArray = false) value must be object. If isArray = true - value must be array. If isArray is not compatible with value type - you get ValidationError('type', 'array', value) or ValidationError('type', 'object', value) in dependence of `isArray`.<br>
 if `isArray` = true and nested fields were specified validator will process all value items as specified nested fields, if any item will be invalid - the validator error will be returned.
 ```js
 var sch1 = Schema();
 
-sch1.object(sh1).array();
+sch1.like(sh1).array();
 // eq
-sch1.object(sh1).array(true);
+sch1.like(sh1).array(true);
 // eq
-sch1.array(sh1);
+sch1.like(sh1).array();
 
 // remove flag
 sch1.array(false);
