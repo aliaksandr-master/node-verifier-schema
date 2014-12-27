@@ -2,69 +2,7 @@
 
 var Schema = require('./_lib/schema');
 
-exports['schema attach'] = {
-	'not schema instance': function (test) {
-		var sh1 = new Schema();
-
-		test.throws(function () {
-			sh1.attachTo(null, 'hello');
-		});
-
-		test.done();
-	},
-
-	'name is not string': function (test) {
-		var sh1 = new Schema();
-		var sh2 = new Schema();
-
-		test.throws(function () {
-			sh1.attachTo(sh2, null);
-		});
-
-		test.done();
-	},
-
-	'name is empty string': function (test) {
-		var sh1 = new Schema();
-		var sh2 = new Schema();
-
-		test.throws(function () {
-			sh1.attachTo(sh2, '');
-		});
-
-		test.done();
-	},
-
-	'duplicate key': function (test) {
-		var sh1 = new Schema();
-		var sh2 = new Schema();
-		sh2.required('a');
-
-		test.throws(function () {
-			sh1.attachTo(sh2, 'a');
-		});
-
-		test.done();
-	}
-};
-
 exports['schema nested object build validation'] = {
-	'recall error': function (test) {
-		var sh1 = new Schema();
-		sh1.object(function () {
-			this.field('a');
-			this.field('b');
-		});
-
-		test.throws(function () {
-			sh1.object(function () {
-				this.field('c');
-				this.field('d');
-			});
-		});
-
-		test.done();
-	},
 	'builder isn\'t string/schema/function': function (test) {
 		var sh1 = new Schema();
 

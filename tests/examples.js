@@ -158,8 +158,8 @@ exports['Object Schema Building: attachTo'] = {
 
 
 		// ATTACH
-		sh2.clone().attachTo(sh1_1, 'myField');
-		sh2.clone().attachTo('attachExampleSchema', 'myField');
+		sh1_1.field('myField').like(sh2);
+		Schema.get('attachExampleSchema').field('myField').like(sh2);
 
 
 		// EQUAL
@@ -221,16 +221,16 @@ exports['Object Schema Building: object'] = {
 			o('world2');
 		});
 
-		var sc1 = new Schema('hello2').object(sh4);
+		var sc1 = new Schema('hello2').like(sh4);
 		sc1.field('some1');
 		sc1.field('some2');
 
 		var sc2 = new Schema();
-		sc2.object(sc1); // add sh1
+		sc2.like(sc1); // add sh1
 
 		var sc3 = new Schema();
-		sc3.object('hello2'); // add sc1
-		sc3.attachTo(sh1, 'inner');
+		sc3.like(Schema.get('hello2')); // add sc1
+		sh1.field('inner').like(sc3);
 
 		var testSc = new Schema().object(function (r, o) {
 			r('my1');

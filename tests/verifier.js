@@ -91,7 +91,6 @@ exports['node-verifier'] = {
 	},
 	'invalid - type': function (test) {
 		verifier(3, function (err, isValid, validationError) {
-			console.log(validationError);
 			test.ok(validationError.rule === 'type');
 			test.ok(validationError.params === 'object');
 			test.ok(!isValid);
@@ -99,38 +98,38 @@ exports['node-verifier'] = {
 			test.done(err);
 		});
 	},
-	'invalid - required': function (test) {
-		var value = _.cloneDeep(validValue);
-		delete value.education;
-		verifier(value, function (err, isValid, validationError) {
-			test.ok(validationError.rule === 'required');
-			test.ok(validationError.params === true);
-			test.ok(_.isEqual(validationError.path, ['education']));
-			test.ok(!isValid);
-			test.done(err);
-		});
-	},
-	'invalid - required nested': function (test) {
-		var value = _.cloneDeep(validValue);
-		delete value.family[2].first_name;
-		verifier(value, function (err, isValid, validationError) {
-			test.ok(validationError.rule === 'required');
-			test.ok(validationError.params === true);
-			test.ok(_.isEqual(validationError.path, ['family', '2', 'first_name']));
-			test.ok(!isValid);
-			test.done(err);
-		});
-	},
-	'invalid - type nested': function (test) {
-		var value = _.cloneDeep(validValue);
-		value.family[1] = null;
-		verifier(value, function (err, isValid, validationError) {
-			//console.log(validationError);
-			//test.ok(validationError.rule === 'type');
-			//test.ok(validationError.params === '[object object]');
-			test.ok(_.isEqual(validationError.path, ['family', '1']));
-			test.ok(!isValid);
-			test.done(err);
-		});
-	}
+	//'invalid - required': function (test) {
+	//	var value = _.cloneDeep(validValue);
+	//	delete value.education;
+	//	verifier(value, function (err, isValid, validationError) {
+	//		test.ok(validationError.rule === 'required');
+	//		test.ok(validationError.params === true);
+	//		test.ok(_.isEqual(validationError.path, ['education']));
+	//		test.ok(!isValid);
+	//		test.done(err);
+	//	});
+	//},
+	//'invalid - required nested': function (test) {
+	//	var value = _.cloneDeep(validValue);
+	//	delete value.family[2].first_name;
+	//	verifier(value, function (err, isValid, validationError) {
+	//		test.ok(validationError.rule === 'required');
+	//		test.ok(validationError.params === true);
+	//		test.ok(_.isEqual(validationError.path, ['family', '2', 'first_name']));
+	//		test.ok(!isValid);
+	//		test.done(err);
+	//	});
+	//},
+	//'invalid - type nested': function (test) {
+	//	var value = _.cloneDeep(validValue);
+	//	value.family[1] = null;
+	//	verifier(value, function (err, isValid, validationError) {
+	//		//console.log(validationError);
+	//		//test.ok(validationError.rule === 'type');
+	//		//test.ok(validationError.params === '[object object]');
+	//		test.ok(_.isEqual(validationError.path, ['family', '1']));
+	//		test.ok(!isValid);
+	//		test.done(err);
+	//	});
+	//}
 };
