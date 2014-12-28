@@ -2,28 +2,25 @@
 
 var _ = require('lodash');
 var inspect = require('./inspect');
+var Schema = require('./schema');
 
-var tester = function (schema, testCase, objectForValidate) {
-
+var tester = function (testCase) {
 	return function (test) {
-		schema.verify(objectForValidate, testCase.options, function (err, isValid, validationError) {
-			if (err) {
-				console.log('unexpected error', inspect(err));
-			}
 
-			if (testCase.validationError != null) {
-				_.each(testCase.validationError, function (v, k) {
-					test.deepEqual(validationError[k], v);
+		testCase.schema.verifier(testCase.options).verify(testCase.value, function (err) {
+			if (testCase.expect) {
+				test.ok(!err, 'must be valid!');
+			} else if (!err) {
+				test.ok(false, 'must be inValid');
+			} else if (err instanceof Schema.ValidationError) {
+				test.ok(true);
+
+				_.each(testCase.vErr, function (v, k) {
+					test.ok(_.isEqual(err[k], v), k +': ' + inspect(v) + ' given: ' + inspect(err[k]));
 				});
+
+				err = null;
 			}
-
-			var res = _.isEqual(isValid, testCase.expect);
-
-			if (!res) {
-				console.log('invalid result ' + inspect(err) + inspect(isValid) + inspect(validationError));
-			}
-
-			test.ok(res);
 
 			test.done(err);
 		});
