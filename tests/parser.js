@@ -60,9 +60,25 @@ exports['array'] = {
 		test.deepEqual(schemaArray, loader(__dirname + '/for-parser-tests/array/schema-full.yml'));
 		test.done();
 	},
-	//
-	//'yaml-short': function (test) {
-	//	test.deepEqual(schemaArray, loader(__dirname + '/for-parser-tests/array/schema-short.yml', 'blablabla'));
-	//	test.done();
-	//}
+
+	'yaml-short': function (test) {
+		test.deepEqual(schemaArray, loader(__dirname + '/for-parser-tests/array/schema-short.yml', 'blablabla'));
+		test.done();
+	}
+};
+
+exports['invalid'] = {
+	'yaml-full': function (test) {
+		test.throws(function () {
+			loader(__dirname + '/for-parser-tests/invalid/schema-full.yml');
+		});
+		test.done();
+	},
+
+	'yaml-short': function (test) {
+		test.throws(function () {
+			loader(__dirname + '/for-parser-tests/invalid/schema-short.yml');
+		});
+		test.done();
+	}
 };
