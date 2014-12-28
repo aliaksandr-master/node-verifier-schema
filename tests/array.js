@@ -27,69 +27,90 @@ var arrSh1 = new Schema().object(function (r, o) {
 });
 
 exports['validate value-array'] = {
-	'#1': tester(s1, { expect: true }, []),
-	'#2': tester(s1, { expect: false }, undefined),
-
-	'check path - valid': tester(arrSh1, { expect: true }, {
-		'fio': {
-			'first_name': 'Homer',
-			'last_name': 'Simpson'
-		},
-		'age': 46,
-		'family': [
-			{
-				'first_name': 'Bart',
-				'last_name': 'Simpson',
-				'age': 13
-			},
-			{
-				'first_name': 'Lisa',
-				'last_name': 'Simpson',
-				'age': 11
-			},
-			{
-				'first_name': 'Marge',
-				'last_name': 'Simpson',
-				'age': 43
-			}
-		],
-		'education': [
-			{
-				name: 'school 4',
-				type: 'school',
-				classes: [1, 2, 3]
-			}
-		]
+	'#1': tester({
+		schema: s1,
+		expect: true,
+		value: []
 	}),
 
-	'check path - invalid': tester(arrSh1, { expect: false, validationError: { rule: 'required', params: true, path: [ 'family', '1', 'first_name' ] } }, {
-		'fio': {
-			'first_name': 'Homer',
-			'last_name': 'Simpson'
+	'#2': tester({
+		schema: s1,
+		expect: false,
+		value: undefined
+	}),
+
+	'check path - valid': tester({
+		schema: arrSh1,
+		expect: true,
+		value: {
+			'fio': {
+				'first_name': 'Homer',
+				'last_name': 'Simpson'
+			},
+			'age': 46,
+			'family': [
+				{
+					'first_name': 'Bart',
+					'last_name': 'Simpson',
+					'age': 13
+				},
+				{
+					'first_name': 'Lisa',
+					'last_name': 'Simpson',
+					'age': 11
+				},
+				{
+					'first_name': 'Marge',
+					'last_name': 'Simpson',
+					'age': 43
+				}
+			],
+			'education': [
+				{
+					name: 'school 4',
+					type: 'school',
+					classes: [1, 2, 3]
+				}
+			]
+		}
+	}),
+
+	'check path - invalid': tester({
+		schema: arrSh1,
+		vErr:{
+			rule: 'required',
+			params: null,
+			path: [ 'family', '1', 'first_name' ]
 		},
-		'age': 46,
-		'family': [
-			{
-				'first_name': 'Bart',
-				'last_name': 'Simpson',
-				'age': 13
+		value: {
+			'fio': {
+				'first_name': 'Homer',
+				'last_name': 'Simpson'
 			},
-			{
-				'age': 11
-			},
-			{
-				'first_name': 'Marge',
-				'last_name': 'Simpson',
-				'age': 43
-			}
-		],
-		'education': [
-			{
-				name: 'school 4',
-				type: 'school',
-				classes: [ 1, 2, 3 ]
-			}
-		]
+			'age': 46,
+			'family': [
+				{
+					'first_name': 'Bart',
+					'last_name': 'Simpson',
+					'age': 13
+				},
+				{
+					'age': 11
+				},
+				{
+					'first_name': 'Marge',
+					'last_name': 'Simpson',
+					'age': 43
+				}
+			],
+			'education': [
+				{
+					name: 'school 4',
+					type: 'school',
+					classes: [ 1, 2, 3 ]
+				}
+			]
+		}
 	})
 };
 
@@ -99,84 +120,217 @@ var s2 = new Schema().array(function (required, optional) {
 });
 
 exports['validate object-array'] = {
-	'#1': tester(s2, { expect: false, validationError: { rule: 'required', params: true, path: [ ] } }, undefined),
-	'#2': tester(s2, { expect: false, validationError: { rule: 'type', params: 'array', path: [ ] } }, {}),
-	'#3': tester(s2, { expect: true }, []),
-	'#4': tester(s2, { expect: false, validationError: { rule: 'type', params: 'array', path: [ ] } }, null),
-	'#5': tester(s2, { expect: false, validationError: { rule: 'type', params: 'array', path: [ ] } }, 3),
-	'#6': tester(s2, { expect: false, validationError: { rule: 'type', params: 'array', path: [ ] } }, "asdasd"),
-	'#7': tester(s2, { expect: false, validationError: { rule: 'type', params: 'array', path: [ ] } }, {
-		'age': null
+	'#1': tester({
+		schema: s2,
+		vErr: { 
+			rule: 'required', 
+			params: null,
+			path: []
+		},
+		value: undefined
 	}),
-	'#8': tester(s2, { expect: false, validationError: { rule: 'type', params: 'array', path: [ ] } }, {
-		'age': null,
-		'school_names': undefined
+
+	'#2': tester({
+		schema: s2,
+		vErr: {
+			rule: 'type',
+			params: 'array',
+			path: []
+		},
+		value: {}
 	}),
-	'#9': tester(s2, { expect: false, validationError: { rule: 'type', params: 'array', path: [ ] } }, {
-		'age': null,
-		'school_names': null,
-		'some': 123123
+
+	'#3': tester({
+		schema: s2,
+		expect: true,
+		value: []
 	}),
-	'#10': tester(s2, { expect: true }, [
-		{
+
+	'#4': tester({
+		schema: s2,
+		vErr: {
+			rule: 'type',
+			params: 'array',
+			path: []
+		},
+		value: null
+	}),
+
+	'#5': tester({
+		schema: s2,
+		vErr: {
+			rule: 'type',
+			params: 'array',
+			path: []
+		},
+		value: 3
+	}),
+
+	'#6': tester({
+		schema: s2,
+		vErr: {
+			rule: 'type',
+			params: 'array',
+			path: []
+		},
+		value: "asdasd"
+	}),
+
+	'#7': tester({
+		schema: s2,
+		vErr: {
+			rule: 'type',
+			params: 'array',
+			path: []
+		},
+		value: {
 			'age': null
 		}
-	]),
-	'#11': tester(s2, { expect: true }, [
-		{
+	}),
+
+	'#8': tester({
+		schema: s2,
+		vErr: {
+			rule: 'type',
+			params: 'array',
+			path: []
+		},
+		value: {
 			'age': null,
 			'school_names': undefined
 		}
-	]),
-	'#12': tester(s2, { expect: false, validationError: { rule: 'available_fields', params: [ 'age', 'school_names' ], path: [ '0' ] } }, [
-		{
+	}),
+
+	'#9': tester({
+		schema: s2,
+		vErr: {
+			rule: 'type',
+			params: 'array',
+			path: []
+		},
+		value: {
 			'age': null,
 			'school_names': null,
 			'some': 123123
 		}
-	]),
-	'#13': tester(s2, { expect: true }, [
-		{
-			'age': null,
-			'school_names': null
+	}),
+
+	'#10': tester({
+		schema: s2,
+		expect: true,
+		value: [
+			{
+				'age': null
+			}
+		]
+	}),
+
+	'#11': tester({
+		schema: s2,
+		expect: true,
+		value: [
+			{
+				'age': null,
+				'school_names': undefined
+			}
+		]
+	}),
+	'#12': tester({
+		schema: s2,
+		vErr: {
+			rule: 'each',
+			params: {available_fields: [ 'age', 'school_names' ]},
+			path: [ '0' ]
 		},
-		{
-			'age': null,
-			'school_names': null
-		}
-	]),
-	'#14': tester(s2, { expect: true }, [
-		{
-			'age': null,
-			'school_names': null
+		value: [
+			{
+				'age': null,
+				'school_names': null,
+				'some': 123123
+			}
+		]
+	}),
+
+	'#13': tester({
+		schema: s2,
+		expect: true,
+		value: [
+			{
+				'age': null,
+				'school_names': null
+			},
+			{
+				'age': null,
+				'school_names': null
+			}
+		]
+	}),
+
+	'#14': tester({
+		schema: s2,
+		expect: true,
+		value: [
+			{
+				'age': null,
+				'school_names': null
+			},
+			{
+				'age': null
+			}
+		]
+	}),
+	'#15': tester({
+		schema: s2,
+		expect: true,
+		value: [
+			{
+				'age': null
+			},
+			{
+				'age': null,
+				'school_names': null
+			}
+		]
+	}),
+
+	'#16': tester({
+		schema: s2,
+		vErr: {
+			rule: 'required',
+			params: null,
+			path: [ '0', 'age' ]
 		},
-		{
-			'age': null
-		}
-	]),
-	'#15': tester(s2, { expect: true }, [
-		{
-			'age': null
+		value: [
+			{
+				'school_names': null
+			},
+			{
+				'age': null,
+				'school_names': null
+			}
+		]
+	}),
+
+	'#17': tester({
+		schema: s2,
+		vErr: {
+			rule: 'required',
+			params: null,
+			path: [ '0', 'age' ]
 		},
-		{
-			'age': null,
-			'school_names': null
-		}
-	]),
-	'#16': tester(s2, { expect: false, validationError: { rule: 'required', params: true, path: [ '0', 'age' ] } }, [
-		{
-			'school_names': null
+		value: [
+			{},
+			{}
+		]
+	}),
+
+	'#18': tester({
+		schema: s2,
+		vErr: {
+			rule: 'each',
+			params: { type: 'object' },
+			path: [ '0' ]
 		},
-		{
-			'age': null,
-			'school_names': null
-		}
-	]),
-	'#17': tester(s2, { expect: false, validationError: { rule: 'required', params: true, path: [ '0', 'age' ] } }, [
-		{},
-		{}
-	]),
-	'#18': tester(s2, { expect: false, validationError: { rule: 'type', params: 'object', path: [ '0' ] } },
-		[ 1, 2, 3 ]
-	)
+		value: [ 1, 2, 3 ]
+	})
 };

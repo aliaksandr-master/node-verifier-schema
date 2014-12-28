@@ -138,60 +138,15 @@ exports['register'] = {
 };
 
 exports['validation error'] = {
-	'rule name is not string': function (test) {
-		test.throws(function () {
-			var err = new Schema.ValidationError(null, null, null);
-		});
-
-		test.throws(function () {
-			var err = new Schema.ValidationResultError(null, null, null, null, null);
-		});
-
-		test.done();
-	},
-	'index': function (test) {
-		var err = new Schema.ValidationResultError('hello', 'world', [1, 3, 2, 4, 5], 3, 'some/path/to/error');
-
-		test.deepEqual(err.path, ['some', 'path', 'to', 'error', '3']);
-		test.deepEqual(err.index, 3);
-		test.deepEqual(err.rule, 'hello');
-		test.deepEqual(err.params, 'world');
-		test.deepEqual(err.value, 4);
-
-		test.done();
-	},
-	'empty rule': function (test) {
-		test.throws(function () {
-			var err = new Schema.ValidationError('', null, null);
-		});
-
-		test.throws(function () {
-			var err = new Schema.ValidationResultError('', null, null, null, null);
-		});
-
-		test.done();
-	},
 	'create Error': function (test) {
 		var err;
 		err = new Schema.ValidationError('hello', null, null);
 		test.ok(err instanceof Error);
 		test.ok(err instanceof Schema.ValidationError);
-		test.ok(!(err instanceof Schema.ValidationResultError));
 
 		err = Schema.ValidationError('hello', null, null);
 		test.ok(err instanceof Error);
 		test.ok(err instanceof Schema.ValidationError);
-		test.ok(!(err instanceof Schema.ValidationResultError));
-
-		err = new Schema.ValidationResultError('hello', null, null);
-		test.ok(err instanceof Error);
-		test.ok(err instanceof Schema.ValidationError);
-		test.ok(err instanceof Schema.ValidationResultError);
-
-		err = Schema.ValidationResultError('hello', null, null);
-		test.ok(err instanceof Error);
-		test.ok(err instanceof Schema.ValidationError);
-		test.ok(err instanceof Schema.ValidationResultError);
 
 		test.done();
 	}

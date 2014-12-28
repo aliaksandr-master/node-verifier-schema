@@ -4,26 +4,6 @@ var Schema = require('./_lib/schema');
 var tester = require('./_lib/tester');
 
 exports.schema = {
-	simple: function (test) {
-		new Schema().validate('type object').object(function (required, optional) {
-			required('fio', 'type object', function (required, optional) {
-				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-				optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
-			});
-			required('age', ['type number', 'max_value 100', 'min_value 16']);
-			required('family', ['type array', 'min_length 2', {each: ['type object']}], function (required, optional) {
-				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-				optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
-				optional('age', ['type number', 'max_value 100', 'min_value 16']);
-			});
-			required('school_names', ['type array', 'min_length 2', 'not empty', {each: ['type string', 'min_length 3', 'max_length 20']}]);
-		});
-		test.ok(true);
-		test.done();
-	},
-
 	clone: function (test) {
 		var s0 = new Schema().validate('type object').object(function (required, optional) {
 			required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
@@ -72,63 +52,185 @@ var s1 = new Schema().object(function (required, optional) {
 });
 
 exports['validate object'] = {
-	'#1': tester(s1, { expect: false, validationError: { rule: 'required', params: true, path: [ ] } }, undefined),
-	'#2': tester(s1, { expect: false, validationError: { rule: 'required', params: true, path: [ 'age' ] } }, {}),
-	'#3': tester(s1, { expect: false, validationError: { rule: 'type', params: 'object', path: [ ] } }, []),
-	'#4': tester(s1, { expect: false, validationError: { rule: 'type', params: 'object', path: [ ] } }, null),
-	'#5': tester(s1, { expect: false, validationError: { rule: 'type', params: 'object', path: [ ] } }, 3),
-	'#6': tester(s1, { expect: false, validationError: { rule: 'type', params: 'object', path: [ ] } }, "asdasd"),
-	'#7': tester(s1, { expect: true }, {
-		'age': null
+	'#1': tester({
+		schema: s1,
+		vErr: {
+			rule: 'required',
+			params: null,
+			path: []
+		},
+		value: undefined
 	}),
-	'#8': tester(s1, { expect: false, validationError: { rule: 'required', params: true, path: [ 'age' ] } }, {
-		'age': undefined
+
+	'#2': tester({
+		schema: s1,
+		vErr: {
+			rule: 'required',
+			params: null,
+			path: [ 'age' ]
+		},
+		value: {}
 	}),
-	'#9': tester(s1, { expect: true }, {
-		'age': {}
+
+	'#3': tester({
+		schema: s1,
+		vErr: {
+			rule: 'type',
+			params: 'object',
+			path: []
+		},
+		value: []
 	}),
-	'#10': tester(s1, { expect: true }, {
-		'age': {
-			'asdasdasd': 'asdasdasd'
+
+	'#4': tester({
+		schema: s1,
+		vErr: {
+			rule: 'type',
+			params: 'object',
+			path: []
+		},
+		value: null
+	}),
+
+	'#5': tester({
+		schema: s1,
+		vErr: {
+			rule: 'type',
+			params: 'object',
+			path: []
+		},
+		value: 3
+	}),
+
+	'#6': tester({
+		schema: s1,
+		vErr: {
+			rule: 'type',
+			params: 'object',
+			path: []
+		},
+		value: "asdasd"
+	}),
+
+	'#7': tester({
+		schema: s1,
+		expect: true,
+		value: {
+			'age': null
 		}
 	}),
-	'#11': tester(s1, { expect: true }, {
-		'age': {
-			'asdasdasd': 'asdasdasd'
+
+	'#8': tester({
+		schema: s1,
+		vErr: {
+			rule: 'required',
+			params: null,
+			path: [ 'age' ]
 		},
-		'school_names': undefined
+		value: {
+			'age': undefined
+		}
 	}),
-	'#12': tester(s1, { expect: false, validationError: { rule: 'available_fields', params: ['age', 'school_names'], path: [ ] } }, {
-		'age': {
-			'asdasdasd': 'asdasdasd'
-		},
-		'school_names': undefined,
-		'some': 123123
+
+	'#9': tester({
+		schema: s1,
+		expect: true,
+		value: {
+			'age': {}
+		}
 	}),
-	'#12-ignore': tester(s1, { expect: true, options: { ignoreExcess: true } }, {
-		'age': {
-			'asdasdasd': 'asdasdasd'
-		},
-		'school_names': undefined,
-		'some': 123123
+
+	'#10': tester({
+		schema: s1,
+		expect: true,
+		value: {
+			'age': {
+				'asdasdasd': 'asdasdasd'
+			}
+		}
 	}),
-	'#13': tester(s1, { expect: false, validationError: { rule: 'available_fields', params: ['age', 'school_names'], path: [ ] } }, {
-		'age': {
-			'asdasdasd': 'asdasdasd'
-		},
-		'some': 123123
+
+	'#11': tester({
+		schema: s1,
+		expect: true,
+		value: {
+			'age': {
+				'asdasdasd': 'asdasdasd'
+			},
+			'school_names': undefined
+		}
 	}),
-	'#14': tester(s1, { expect: false, validationError: { rule: 'available_fields', params: ['age', 'school_names'], path: [ ] } }, {
-		'age': {
-			'asdasdasd': 'asdasdasd'
+
+	'#12': tester({
+		schema: s1,
+		vErr: {
+			rule: 'available_fields',
+			params: ['age', 'school_names'],
+			path: []
 		},
-		'school_names': 123123,
-		'some': 123123
+		value: {
+			'age': {
+				'asdasdasd': 'asdasdasd'
+			},
+			'school_names': undefined,
+			'some': 123123
+		}
 	}),
-	'#15': tester(s1, { expect: true }, {
-		'age': {
-			'asdasdasd': 'asdasdasd'
+
+	'#12-ignore': tester({
+		schema: s1,
+		expect: true,
+		options: {
+			ignoreExcess: true
 		},
-		'school_names': 123123
+		value: {
+			'age': {
+				'asdasdasd': 'asdasdasd'
+			},
+			'school_names': undefined,
+			'some': 123123
+		}
+	}),
+
+	'#13': tester({
+		schema: s1,
+		vErr: {
+			rule: 'available_fields',
+			params: ['age', 'school_names'],
+			path: []
+		},
+		value: {
+			'age': {
+				'asdasdasd': 'asdasdasd'
+			},
+			'some': 123123
+		}
+	}),
+
+	'#14': tester({
+		schema: s1,
+		vErr: {
+			rule: 'available_fields',
+			params: ['age', 'school_names'],
+			path: []
+		},
+		value: {
+			'age': {
+				'asdasdasd': 'asdasdasd'
+			},
+			'school_names': 123123,
+			'some': 123123
+		}
+	}),
+
+	'#15': tester({
+		schema: s1,
+		expect: true,
+		value: {
+			'age': {
+				'asdasdasd': 'asdasdasd'
+			},
+			'school_names': 123123
+		}
 	})
 };

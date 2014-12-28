@@ -38,16 +38,15 @@ exports['Simple Usage'] = {
 			this.required('last_name');
 			this.optional('middle_name');
 		});
-		var value = {};
-		sh1.verify(value, function (err, isValid, vError) {
-			test.ok(!isValid);
+		sh1.verifier().verify({}, function (err) {
+			test.ok(!!err);
 
-			test.equal(vError.rule, 'required');
-			test.strictEqual(vError.params, true);
-			test.strictEqual(vError.value, undefined);
-			test.deepEqual(vError.path, ['first_name']);
+			test.equal(err.rule, 'required');
+			test.strictEqual(err.params, null);
+			test.strictEqual(err.value, undefined);
+			test.deepEqual(err.path, ['first_name']);
 
-			test.done(err);
+			test.done();
 		});
 	},
 	'verify - optional field isn\'t specified' : function (test) {
@@ -56,10 +55,12 @@ exports['Simple Usage'] = {
 			this.required('last_name');
 			this.optional('middle_name');
 		});
-		var value = {first_name : 'hello', last_name : 'world'};
-		sh1.verify(value, function (err, isValid, vError) {
-			test.ok(isValid);
-			test.strictEqual(vError, null);
+
+		var value = { first_name : 'hello', last_name : 'world' };
+
+		sh1.verifier().verify(value, function (err) {
+			test.ok(!err);
+			test.equal(err, null);
 			test.done(err);
 		});
 	},
@@ -69,10 +70,12 @@ exports['Simple Usage'] = {
 			this.required('last_name');
 			this.optional('middle_name');
 		});
-		var value = {first_name : 'hello', last_name : 'world', middle_name : 'param-pam-pam'};
-		sh1.verify(value, function (err, isValid, vError) {
-			test.ok(isValid);
-			test.strictEqual(vError, null);
+
+		var value = { first_name : 'hello', last_name : 'world', middle_name : 'param-pam-pam'};
+
+		sh1.verifier().verify(value, function (err) {
+			test.ok(!err);
+			test.equal(err, null);
 			test.done(err);
 		});
 	},
@@ -91,13 +94,13 @@ exports['Simple Usage'] = {
 		var _keys = _.keys(value);
 		value.excess_field = true;
 
-		sh1.verify(value, function (err, isValid, vError) {
-			test.ok(!isValid);
-			test.equal(vError.rule, 'available_fields');
-			test.deepEqual(vError.params, _keys);
-			test.deepEqual(vError.value, value);
-			test.deepEqual(vError.path, []);
-			test.done(err);
+		sh1.verifier().verify(value, function (err) {
+			test.ok(!!err);
+			test.equal(err.rule, 'available_fields');
+			test.deepEqual(err.params, _keys);
+			test.deepEqual(err.value, value);
+			test.deepEqual(err.path, []);
+			test.done();
 		});
 	},
 	'verify - ignore excess field' : function (test) {
@@ -114,10 +117,10 @@ exports['Simple Usage'] = {
 		};
 		value.excess_field = true;
 
-		sh1.verify(value, { ignoreExcess: true }, function (err, isValid, vError) {
-			test.ok(isValid);
-			test.equal(vError, null);
-			test.done(err);
+		sh1.verifier({ ignoreExcess: true }).verify(value, function (err) {
+			test.ok(!err);
+			test.equal(err, null);
+			test.done();
 		});
 	}
 };
@@ -212,37 +215,6 @@ exports['Object Schema Building: like'] = {
 	}
 };
 
-exports['Object Schema Building: array'] = {
-	'custom validation': function (test) {
-		var sch1 = new Schema().array().validate(function(value, done){
-			var itemIndex;
-			var isValid = _.all(value, function (item, index) {
-				// some validation, for example: type = string
-				itemIndex = index;
-				return _.isString(item);
-			});
-
-			if (!isValid) {
-				done(Schema.ValidationError('type', 'string', itemIndex));
-				return;
-			}
-
-			done();
-		});
-
-		sch1.verify(["1" ,"2" ,"3", 4], function (err, isValid, validationError) {
-			validationError || (validationError = {});
-			test.equal(err, null);
-			test.ok(!isValid);
-			test.strictEqual(validationError.rule, 'type');
-			test.strictEqual(validationError.params, 'string');
-			test.strictEqual(validationError.index, 3);
-			test.deepEqual(validationError.value, 4);
-			test.done();
-		});
-	}
-};
-
 exports['Object Schema Building: object'] = {
 	'typical': function (test) {
 		var sh1 = new Schema().object(function (r, o) {
@@ -304,61 +276,5 @@ exports['Object Schema Building: required and optional'] = {
 		test.deepEqual(sc2, sc1);
 
 		test.done();
-	}
-};
-
-exports['Object Schema Building: validate'] = {
-	'custom validator': function (test) {
-		var sh1 = new Schema();
-		sh1.optional();
-		sh1.validate(function (value, done) {
-			if (_.isString(value)) {
-				done();
-				return;
-			}
-			done(new Schema.ValidationError('type', 'string'));
-		});
-
-		// example with custom validation mapper (validator)
-		var validate = [1, 2, 3];
-		var sh2 = sh1.clone().validate([validate]);
-
-		var myValidator = function (validationArray) {
-			return function (value, done) {
-				async.reduce(validationArray, null, function (_1, validation, done) {
-					if (_.isFunction(validation)) {
-						validation(value, done);
-						return;
-					}
-
-					if (_.isArray(validation)) {
-						if (_.contains(validation, value)) {
-							console.log(validation, value);
-							done();
-							return;
-						}
-
-						done(Schema.ValidationError('contains', validation));
-					}
-					done(new Error('invalid type of validation rule'));
-				}, done);
-			};
-		};
-
-		var value = "123";
-		sh1.verify(value, { validator: myValidator }, function (err1, isValid, validationError) {
-			test.ok(isValid);
-			test.equal(err1, null);
-			test.equal(validationError, null);
-
-			sh2.verify(value, { validator: myValidator }, function (err2, isValid, validationError) {
-				test.ok(!isValid);
-				test.equal(err2, null);
-				test.strictEqual(validationError.rule, 'contains');
-				test.deepEqual(validationError.params, validate);
-				test.deepEqual(validationError.value, value);
-				test.done(err1||err2);
-			});
-		});
 	}
 };

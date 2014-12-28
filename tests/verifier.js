@@ -1,8 +1,8 @@
 "use strict";
 
 var _ = require('lodash');
+var tester = require('./_lib/tester');
 var Schema = require('./_lib/schema');
-var Verifier = require('node-verifier');
 
 var schema = new Schema().validate('type object').object(function (r, o) {
 	r('fio', 'type object').object(function (r, o) {
@@ -61,75 +61,63 @@ var validValue = {
 	]
 };
 
-var verifier = schema.compile(function (validations) {
-	if (validations == null) {
-		return validations;
-	}
-
-	var verifier = new Verifier(validations);
-
-	return function (value, done) {
-		verifier.verify(value, function (err) {
-			if (err instanceof Verifier.ValidationError) {
-				done(new Schema.ValidationError(err.rule, err.params, err.index));
-				err = null;
-				return;
-			}
-
-			done(err);
-		});
-	};
-});
-
 exports['node-verifier'] = {
-	'valid': function (test) {
-		var value = _.cloneDeep(validValue);
-		verifier(value, function (err, isValid, validationError) {
-			test.ok(isValid);
-			test.done(err);
-		});
-	},
-	'invalid - type': function (test) {
-		verifier(3, function (err, isValid, validationError) {
-			test.ok(validationError.rule === 'type');
-			test.ok(validationError.params === 'object');
-			test.ok(!isValid);
-			test.ok(_.isEqual(validationError.path, []));
-			test.done(err);
-		});
-	},
-	//'invalid - required': function (test) {
-	//	var value = _.cloneDeep(validValue);
-	//	delete value.education;
-	//	verifier(value, function (err, isValid, validationError) {
-	//		test.ok(validationError.rule === 'required');
-	//		test.ok(validationError.params === true);
-	//		test.ok(_.isEqual(validationError.path, ['education']));
-	//		test.ok(!isValid);
-	//		test.done(err);
-	//	});
-	//},
-	//'invalid - required nested': function (test) {
-	//	var value = _.cloneDeep(validValue);
-	//	delete value.family[2].first_name;
-	//	verifier(value, function (err, isValid, validationError) {
-	//		test.ok(validationError.rule === 'required');
-	//		test.ok(validationError.params === true);
-	//		test.ok(_.isEqual(validationError.path, ['family', '2', 'first_name']));
-	//		test.ok(!isValid);
-	//		test.done(err);
-	//	});
-	//},
-	//'invalid - type nested': function (test) {
-	//	var value = _.cloneDeep(validValue);
-	//	value.family[1] = null;
-	//	verifier(value, function (err, isValid, validationError) {
-	//		//console.log(validationError);
-	//		//test.ok(validationError.rule === 'type');
-	//		//test.ok(validationError.params === '[object object]');
-	//		test.ok(_.isEqual(validationError.path, ['family', '1']));
-	//		test.ok(!isValid);
-	//		test.done(err);
-	//	});
-	//}
+
+	'valid': tester({
+		schema: schema,
+		expect: true,
+		value: _.cloneDeep(validValue)
+	}),
+
+	'invalid - type': tester({
+		schema: schema,
+		validationError: {
+			rule: 'type',
+			params: 'object',
+			path: []
+		},
+		value: 3
+	}),
+
+	'invalid - required': tester({
+		schema: schema,
+		vErr: {
+			rule: 'required',
+			params: null,
+			path: [ 'education' ]
+		},
+		value: (function () {
+			var value = _.cloneDeep(validValue);
+			delete value.education;
+			return value;
+		})()
+	}),
+
+	'invalid - required nested': tester({
+		schema: schema,
+		vErr: {
+			rule: 'required',
+			params: null,
+			path: ['family', '2', 'first_name']
+		},
+		value:  (function () {
+			var value = _.cloneDeep(validValue);
+			delete value.family[2].first_name;
+			return value;
+		})()
+	}),
+
+	'invalid - type nested': tester({
+		schema: schema,
+		vErr: {
+			rule: 'each',
+			params: { type: 'object' },
+			path: ['family', '1']
+		},
+		value: (function () {
+			var value = _.cloneDeep(validValue);
+			value.family[1] = null;
+			return value;
+		})()
+	})
 };
