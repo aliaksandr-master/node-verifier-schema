@@ -29,6 +29,30 @@ exports['check compile return value'] = {
 	}
 };
 
+exports['schema - like'] = {
+	'process': function (test) {
+		var sh1 = new Schema();
+		var sh2 = new Schema().array();
+
+		sh1.like(sh2, function (schema) {
+			return false;
+		});
+
+		test.ok(!sh1.isArray);
+
+		test.done();
+	},
+	'throw if schema isn\'t Schema': function (test) {
+		var sh2 = new Schema().array();
+
+		test.throws(function () {
+			sh2.like(null);
+		});
+
+		test.done();
+	}
+};
+
 exports['required'] = {
 	'set required': function (test) {
 		var sh1 = new Schema();
@@ -122,6 +146,17 @@ exports['validation error'] = {
 		test.throws(function () {
 			var err = new Schema.ValidationResultError(null, null, null, null, null);
 		});
+
+		test.done();
+	},
+	'index': function (test) {
+		var err = new Schema.ValidationResultError('hello', 'world', [1, 3, 2, 4, 5], 3, 'some/path/to/error');
+
+		test.deepEqual(err.path, ['some', 'path', 'to', 'error', '3']);
+		test.deepEqual(err.index, 3);
+		test.deepEqual(err.rule, 'hello');
+		test.deepEqual(err.params, 'world');
+		test.deepEqual(err.value, 4);
 
 		test.done();
 	},
