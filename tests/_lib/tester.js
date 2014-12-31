@@ -10,6 +10,10 @@ var tester = function (testCase) {
 		testCase.schema.verifier(testCase.options).verify(testCase.value, function (err) {
 			if (testCase.expect) {
 				test.ok(!err, 'must be valid!');
+				if (err instanceof Schema.ValidationError) {
+					console.log('>>error:', inspect(err));
+					err = null;
+				}
 			} else if (!err) {
 				test.ok(false, 'must be inValid');
 			} else if (err instanceof Schema.ValidationError) {
