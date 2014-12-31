@@ -71,7 +71,7 @@ exports['node-verifier'] = {
 
 	'invalid - type': tester({
 		schema: schema,
-		validationError: {
+		vErr: {
 			rule: 'type',
 			params: 'object',
 			path: []
@@ -110,9 +110,9 @@ exports['node-verifier'] = {
 	'invalid - type nested': tester({
 		schema: schema,
 		vErr: {
-			rule: 'each',
-			params: { type: 'object' },
-			path: ['family', '1']
+			rule: 'type',
+			params: 'object',
+			path: [ 'family', '1' ]
 		},
 		value: (function () {
 			var value = _.cloneDeep(validValue);

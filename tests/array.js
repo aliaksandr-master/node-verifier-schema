@@ -238,8 +238,8 @@ exports['validate object-array'] = {
 	'#12': tester({
 		schema: s2,
 		vErr: {
-			rule: 'each',
-			params: {available_fields: [ 'age', 'school_names' ]},
+			rule: 'available_fields',
+			params: [ 'age', 'school_names' ],
 			path: [ '0' ]
 		},
 		value: [
@@ -327,8 +327,8 @@ exports['validate object-array'] = {
 	'#18': tester({
 		schema: s2,
 		vErr: {
-			rule: 'each',
-			params: { type: 'object' },
+			rule: 'type',
+			params: 'object',
 			path: [ '0' ]
 		},
 		value: [ 1, 2, 3 ]
