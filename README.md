@@ -6,6 +6,8 @@
 [![Coverage Status](https://img.shields.io/coveralls/aliaksandr-pasynkau/node-verifier-schema.svg?style=flat-square)](https://coveralls.io/r/aliaksandr-pasynkau/node-verifier-schema?branch=master)
 
 ## Destination:
+
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/aliaksandr-pasynkau/node-verifier-schema?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 - validate nested in object (JSON) fields.
 - compare schema with value.
 - reuse api validations.
