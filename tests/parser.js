@@ -1,6 +1,5 @@
 "use strict";
 
-var loader = require('./_lib/loader');
 var Schema = require('./_lib/schema');
 
 var schema = new Schema().validate('type object').object(function (r, o) {
@@ -25,12 +24,12 @@ var schema = new Schema().validate('type object').object(function (r, o) {
 
 exports['simple'] = {
 	'yaml-full': function (test) {
-		test.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema-full.yml'));
+		test.deepEqual(schema, Schema.load(__dirname + '/for-parser-tests/simple/schema-full.yml'));
 		test.done();
 	},
 
 	'yaml-short': function (test) {
-		test.deepEqual(schema, loader(__dirname + '/for-parser-tests/simple/schema-short.yml'));
+		test.deepEqual(schema, Schema.load(__dirname + '/for-parser-tests/simple/schema-short.yml'));
 		test.done();
 	}
 };
@@ -57,12 +56,12 @@ var schemaArray = new Schema().optional().validate('type object').array(function
 
 exports['array'] = {
 	'yaml-full': function (test) {
-		test.deepEqual(schemaArray, loader(__dirname + '/for-parser-tests/array/schema-full.yml'));
+		test.deepEqual(schemaArray, Schema.load(__dirname + '/for-parser-tests/array/schema-full.yml'));
 		test.done();
 	},
 
 	'yaml-short': function (test) {
-		test.deepEqual(schemaArray, loader(__dirname + '/for-parser-tests/array/schema-short.yml', 'blablabla'));
+		test.deepEqual(schemaArray, Schema.load(__dirname + '/for-parser-tests/array/schema-short.yml', 'blablabla'));
 		test.done();
 	}
 };
@@ -70,14 +69,14 @@ exports['array'] = {
 exports['invalid'] = {
 	'yaml-full': function (test) {
 		test.throws(function () {
-			loader(__dirname + '/for-parser-tests/invalid/schema-full.yml');
+			Schema.load(__dirname + '/for-parser-tests/invalid/schema-full.yml');
 		});
 		test.done();
 	},
 
 	'yaml-short': function (test) {
 		test.throws(function () {
-			loader(__dirname + '/for-parser-tests/invalid/schema-short.yml');
+			Schema.load(__dirname + '/for-parser-tests/invalid/schema-short.yml');
 		});
 		test.done();
 	}

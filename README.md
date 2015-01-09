@@ -341,12 +341,11 @@ Load your schema from YAML (or JS) file.
 ### Use
 ```js
 var Schema = require('node-verifier-schema');
-var schemaLoader = require('node-verifier-schema/load');
 
 var schema1 = schemaLoader('path/to/file.tml');
 
 // load schema and register as 'nameForThisSchema'
-schemaLoader('path/to/file.tml', 'nameForThisSchema');
+Schema.load('path/to/file.tml', 'nameForThisSchema');
 var schema2 = Schema.get('nameForThisSchema');
 ```
 Function schemaLoader has two params:<br>
