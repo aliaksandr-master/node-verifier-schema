@@ -128,9 +128,9 @@ exports['Simple Usage'] = {
 exports['Create Schema, Register'] = {
 	'equal registering': function (test) {
 		var sh1 = new Schema();
-		var sh2 = Schema(); // jshint ignore: line
+		var sh2 = Schema.create();
 		var sh3 = new Schema('nameForRegister1');
-		var sh4 = Schema('nameForRegister2'); // jshint ignore: line
+		var sh4 = Schema.create('nameForRegister2');
 		Schema.register('someSchema1', sh1);
 		Schema.register('someSchema2', sh2);
 

@@ -36,25 +36,25 @@ var Schema = require('node-verifier-schema');
 var Schema = require('node-verifier-schema');
 
 // Create schema
-var sc1 = Schema().object(function (required, optional) {
+var sc1 = new Schema().object(function (required, optional) {
     field('first_name');
     required('last_name');
     optional('middle_name');
 });
 // Eq
-var sc1 = Schema().object(function () {
+var sc1 = Schema.create().object(function () {
     this.required('first_name');
     this.field('last_name');
     this.optional('middle_name');
 });
 // Eq
-var sc1 = Schema().object(function () {
+var sc1 = Schema.create().object(function () {
     this.field('first_name');
     this.field('last_name');
     this.field('middle_name').optional();
 });
 // Eq
-var sc1 = Schema();
+var sc1 = Schema.create();
     sc1.required('first_name')
     sc1.field('last_name')
     sc1.optional('middle_name');
@@ -78,10 +78,10 @@ sc1.verifier().verify(value, function (err, isValid, validationError) {
 ## Create Schema
 ```js
 var sh1 = new Schema();
-var sh2 = Schema();
+var sh2 = Schema.create();
 
 var sh3 = new Schema('nameForRegister1');
-var sh4 = Schema('nameForRegister2');
+var sh4 = Schema.create('nameForRegister2');
 ```
 
 ## Schema registration
@@ -89,7 +89,7 @@ var sh4 = Schema('nameForRegister2');
 var sc1 = new Schema();
 
 // register
-var sc2 = Schema('mySchema1'); // new Schema and register as "mySchema1"
+var sc2 = Schema.create('mySchema1'); // new Schema and register as "mySchema1"
 var sc3 = new Schema('mySchema2'); // new Schema and register as "mySchema2"
 Schema.register('mySchema', sc1); // return sc1
 Schema.register('mySchema', sc1); // throw Error (schema "mySceham" was already registered)
@@ -218,7 +218,7 @@ If `nested` value will be `Boolean` or not specified (Nullable) - adds (removes)
 `isArray` flag says validator how value can be processed. By default (isArray = false) value must be object. If isArray = true - value must be array. If isArray is not compatible with value type - you get ValidationError('type', 'array', value) or ValidationError('type', 'object', value) in dependence of `isArray`.<br>
 if `isArray` = true and nested fields were specified validator will process all value items as specified nested fields, if any item will be invalid - the validator error will be returned.
 ```js
-var sch1 = Schema();
+var sch1 = Schema.create();
 
 sch1.like(sh1).array();
 // eq
@@ -316,7 +316,7 @@ Create required field.<br>
 If called without arguments - add required flag<br>
 `isRequired` - flag for validation, if this flag is true then validated value must not be `undefined` - returned Schema.ValidationError('required', true)
 ```js
-var sc1 = Schema();
+var sc1 = Schema.create();
 sc1.field('some');
 // eq
 sc1.required('some');
@@ -329,7 +329,7 @@ sc1.required('some');
 Create optional field.<br>
 If called without arguments - removes required flag.
 ```js
-var sc1 = Schema();
+var sc1 = Schema.create();
 sc1.field('some').optional();
 // eq
 sc1.optional('some');
