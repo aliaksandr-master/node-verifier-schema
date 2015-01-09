@@ -7,7 +7,14 @@ var Schema = require('./schema');
 var tester = function (testCase) {
 	return function (test) {
 
-		testCase.schema.verifier(testCase.options).verify(testCase.value, function (err) {
+		var method = testCase.schema.verify.bind(testCase.schema);
+
+		if (testCase.options) {
+			var vrfr = testCase.schema.verifier(testCase.options);
+			method = vrfr.verify.bind(vrfr);
+		}
+
+		method(testCase.value, function (err) {
 			if (testCase.expect) {
 				test.ok(!err, 'must be valid!');
 				if (err instanceof Schema.ValidationError) {
