@@ -46,7 +46,12 @@ exports.schema = {
 	}
 };
 
-var s1 = new Schema().object(function (required, optional) {
+var s1 = new Schema().strict().object(function (required, optional) {
+	required('age');
+	optional('school_names');
+});
+
+var s2 = new Schema().object(function (required, optional) {
 	required('age');
 	optional('school_names');
 });
@@ -178,11 +183,8 @@ exports['validate object'] = {
 	}),
 
 	'#12-ignore': tester({
-		schema: s1,
+		schema: s2,
 		expect: true,
-		options: {
-			ignoreExcess: true
-		},
 		value: {
 			'age': {
 				'asdasdasd': 'asdasdasd'
