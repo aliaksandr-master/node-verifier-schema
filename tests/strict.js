@@ -37,6 +37,18 @@ exports['invalid object'] = tester({
 	}
 });
 
+var sh2_2 = sh2.clone().strict(false);
+exports['valid object: disable strict'] = tester({
+	schema: sh2_2,
+	expect: true,
+	value: {
+		some_1: 1,
+		some_2: 2,
+		some_3: 3,
+		some_4: 3
+	}
+});
+
 
 var sh3 = sh1.clone().array();
 exports['valid array-object'] = tester({
@@ -59,6 +71,19 @@ exports['invalid array-object'] = tester({
 		params: ['some_1', 'some_2', 'some_3'],
 		path: ['0']
 	},
+	value: [{
+		some_1: 1,
+		some_2: 2,
+		some_3: 3,
+		some_4: 3
+	}]
+});
+
+
+var sh4_2 = sh4.clone().strict(false);
+exports['valid array-object: disable strict'] = tester({
+	schema: sh4_2,
+	expect: true,
 	value: [{
 		some_1: 1,
 		some_2: 2,
