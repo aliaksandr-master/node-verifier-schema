@@ -114,7 +114,7 @@ exports['validate value-array'] = {
 	})
 };
 
-var s2 = new Schema().array(function (required, optional) {
+var s2 = new Schema().strict().array(function (required, optional) {
 	required('age');
 	optional('school_names');
 });

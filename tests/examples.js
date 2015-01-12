@@ -80,7 +80,8 @@ exports['Simple Usage'] = {
 		});
 	},
 	'verify - excess field' : function (test) {
-		var sh1 = new Schema().object(function () {
+		console.log(123);
+		var sh1 = new Schema().strict().object(function () {
 			this.field('first_name');
 			this.required('last_name');
 			this.optional('middle_name');
@@ -94,7 +95,7 @@ exports['Simple Usage'] = {
 		var _keys = _.keys(value);
 		value.excess_field = true;
 
-		sh1.verifier().verify(value, function (err) {
+		sh1.verify(value, function (err) {
 			test.ok(!!err);
 			test.equal(err.rule, 'available_fields');
 			test.deepEqual(err.params, _keys);
