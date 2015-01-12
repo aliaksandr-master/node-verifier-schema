@@ -66,6 +66,38 @@ exports['array'] = {
 	}
 };
 
+var schemaArrayStrict = new Schema().optional().strict().validate('type object').array(function (r, o) {
+	r('fio', 'type object').strict().object(function (r, o) {
+		r('first_name',  ['type string', 'min_length 3', 'max_length 20']);
+		r('last_name',   ['type string', 'min_length 3', 'max_length 20']);
+		o('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+	});
+	r('age', ['type number', 'max_value 100', 'min_value 16']);
+	r('family', ['type array', 'min_length 2', {each: ['type object']}]).strict().optional().array(function (r, o) {
+		r('first_name',  ['type string', 'min_length 3', 'max_length 20']);
+		r('last_name',   ['type string', 'min_length 3', 'max_length 20']);
+		o('middle_name', ['type string', 'min_length 3', 'max_length 20']).strict();
+		o('age', ['type number', 'max_value 100', 'min_value 16']);
+	});
+	r('education', ['type array', 'min_length 2', 'not empty', {each: ['type string', 'min_length 3', 'max_length 20']}]).strict().array(function (r, o) {
+		r('name', 'type string');
+		r('type', 'type string');
+		o('classes').array();
+	});
+});
+
+exports['strict'] = {
+	'yaml-full': function (test) {
+		test.deepEqual(schemaArrayStrict, Schema.load(__dirname + '/for-parser-tests/strict/schema-full.yml'));
+		test.done();
+	},
+
+	'yaml-short': function (test) {
+		test.deepEqual(schemaArrayStrict, Schema.load(__dirname + '/for-parser-tests/strict/schema-short.yml'));
+		test.done();
+	}
+};
+
 exports['invalid'] = {
 	'yaml-full': function (test) {
 		test.throws(function () {
