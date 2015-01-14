@@ -335,6 +335,19 @@ sc1.field('some').optional();
 sc1.optional('some');
 ```
 
+#### Schema::strict( [flag] )
+Add strict mode flag.<br>
+If Strict mode was enabled - in this object excess fields can't be pass successfully the validation.
+```js
+var schema = new Schema();
+schema.strict();
+// eq
+schema.strict(true);
+
+// if you want to disable strict mode of this schema/field
+schema.strict(false);
+```
+
 ## Schema File Loader
 Load your schema from YAML (or JS) file.
 
