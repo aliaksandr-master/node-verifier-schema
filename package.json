@@ -37,10 +37,10 @@
   },
   "homepage": "https://github.com/aliaksandr-pasynkau/node-verifier-schema",
   "dependencies": {
-    "lodash": "^2.4.1",
-    "async-iterate": "^0.1.3",
-    "js-yaml": "^3.2.3",
-    "node-verifier": "~0.5.5"
+    "lodash": "~3.0.0",
+    "async-iterate": "~0.1.4",
+    "js-yaml": "~3.2.5",
+    "node-verifier": "~0.5.6"
   },
   "devDependencies": {
     "async": "^0.9.0",
@@ -48,7 +48,7 @@
     "nodeunit": "^0.9.0",
     "grunt": "^0.4.5",
     "grunto": "^1.2.1",
-    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-jshint": "^0.11.0",
     "jscoverage": "^0.5.9",
     "grunt-cli": "^0.1.13",
     "coveralls": "^2.11.2"
