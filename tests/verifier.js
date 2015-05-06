@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var _ = require('lodash');
 var tester = require('./_lib/tester');
@@ -6,18 +6,18 @@ var Schema = require('./_lib/schema');
 
 var schema = new Schema().validate('type object').object(function (r, o) {
 	r('fio', 'type object').object(function (r, o) {
-		r('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-		r('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-		o('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+		r('first_name',  [ 'type string', 'min_length 3', 'max_length 20' ]);
+		r('last_name',   [ 'type string', 'min_length 3', 'max_length 20' ]);
+		o('middle_name', [ 'type string', 'min_length 3', 'max_length 20' ]);
 	});
-	r('age', ['type number', 'max_value 100', 'min_value 16']);
-	r('family', ['type array', 'min_length 2', {each: 'type object'}]).array(function (r, o) {
-		r('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-		r('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-		o('middle_name', ['type string', 'min_length 3', 'max_length 20']);
-		o('age', ['type number', 'max_value 100', 'min_value 10']);
+	r('age', [ 'type number', 'max_value 100', 'min_value 16' ]);
+	r('family', [ 'type array', 'min_length 2', { each: 'type object' } ]).array(function (r, o) {
+		r('first_name',  [ 'type string', 'min_length 3', 'max_length 20' ]);
+		r('last_name',   [ 'type string', 'min_length 3', 'max_length 20' ]);
+		o('middle_name', [ 'type string', 'min_length 3', 'max_length 20' ]);
+		o('age', [ 'type number', 'max_value 100', 'min_value 10' ]);
 	});
-	r('education', ['type array', 'min_length 2', 'not empty', {each: ['type object']}]).array(function (r, o) {
+	r('education', [ 'type array', 'min_length 2', 'not empty', { each: [ 'type object' ] } ]).array(function (r, o) {
 		r('name', 'type string');
 		r('type', 'type string');
 		o('classes').array();
@@ -51,12 +51,12 @@ var validValue = {
 		{
 			name: 'school 4',
 			type: 'school',
-			classes: [1, 2, 3]
+			classes: [ 1, 2, 3 ]
 		},
 		{
 			name: 'school 5',
 			type: 'school',
-			classes: [4, 5, 6]
+			classes: [ 4, 5, 6 ]
 		}
 	]
 };
@@ -88,7 +88,9 @@ exports['node-verifier'] = {
 		},
 		value: (function () {
 			var value = _.cloneDeep(validValue);
+
 			delete value.education;
+
 			return value;
 		})()
 	}),
@@ -98,11 +100,13 @@ exports['node-verifier'] = {
 		vErr: {
 			rule: 'required',
 			params: null,
-			path: ['family', '2', 'first_name']
+			path: [ 'family', '2', 'first_name' ]
 		},
-		value:  (function () {
+		value: (function () {
 			var value = _.cloneDeep(validValue);
+
 			delete value.family[2].first_name;
+
 			return value;
 		})()
 	}),
@@ -116,7 +120,9 @@ exports['node-verifier'] = {
 		},
 		value: (function () {
 			var value = _.cloneDeep(validValue);
+
 			value.family[1] = null;
+
 			return value;
 		})()
 	})

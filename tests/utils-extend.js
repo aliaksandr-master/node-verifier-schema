@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var extend = require('./_lib/utils-extend');
 
@@ -21,6 +21,7 @@ exports.method = function (test) {
 		A.apply(this, arguments);
 		this.c = 123;
 	};
+
 	C.extend = extend.method;
 	extend(C, A);
 
@@ -34,6 +35,7 @@ exports.method = function (test) {
 	var E = D.extend();
 
 	var e = new E();
+
 	test.ok(e.c === 123);
 	test.ok(e.d === 345);
 	test.ok(e.a === 234);

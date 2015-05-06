@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-module.exports = require('grunto')(function(grunt) {
+module.exports = require('grunto')(function (grunt) {
 
 	grunt.registerTask('test', [
 		'eslint:lib',
@@ -24,7 +24,6 @@ module.exports = require('grunto')(function(grunt) {
 			tests: [
 				'tests/*.js'
 			]
-		},
+		}
 	};
-
 });

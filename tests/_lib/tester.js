@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var _ = require('lodash');
 var inspect = require('./inspect');
@@ -11,12 +11,14 @@ var tester = function (testCase) {
 
 		if (testCase.options) {
 			var vrfr = testCase.schema.verifier(testCase.options);
+
 			method = vrfr.verify.bind(vrfr);
 		}
 
 		method(testCase.value, function (err) {
 			if (testCase.expect) {
 				test.ok(!err, 'must be valid!');
+
 				if (err instanceof Schema.ValidationError) {
 					console.log('>>error:', inspect(err));
 					err = null;
@@ -27,7 +29,7 @@ var tester = function (testCase) {
 				test.ok(true);
 
 				_.each(testCase.vErr, function (v, k) {
-					test.ok(_.isEqual(err[k], v), k +': ' + inspect(v) + ' given: ' + inspect(err[k]));
+					test.ok(_.isEqual(err[k], v), k + ': ' + inspect(v) + ' given: ' + inspect(err[k]));
 				});
 
 				err = null;

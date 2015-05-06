@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var Schema = require('./_lib/schema');
 var tester = require('./_lib/tester');
@@ -69,7 +69,7 @@ exports['validate value-array'] = {
 				{
 					name: 'school 4',
 					type: 'school',
-					classes: [1, 2, 3]
+					classes: [ 1, 2, 3 ]
 				}
 			]
 		}
@@ -77,7 +77,7 @@ exports['validate value-array'] = {
 
 	'check path - invalid': tester({
 		schema: arrSh1,
-		vErr:{
+		vErr: {
 			rule: 'required',
 			params: null,
 			path: [ 'family', '1', 'first_name' ]
@@ -122,8 +122,8 @@ var s2 = new Schema().strict().array(function (required, optional) {
 exports['validate object-array'] = {
 	'#1': tester({
 		schema: s2,
-		vErr: { 
-			rule: 'required', 
+		vErr: {
+			rule: 'required',
 			params: null,
 			path: []
 		},
@@ -173,7 +173,7 @@ exports['validate object-array'] = {
 			params: 'array',
 			path: []
 		},
-		value: "asdasd"
+		value: 'asdasd'
 	}),
 
 	'#7': tester({

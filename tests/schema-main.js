@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var Schema = require('./_lib/schema');
 
@@ -9,6 +9,7 @@ exports['schema nested object build validation'] = {
 		test.throws(function () {
 			sh1.object(null);
 		});
+
 		test.done();
 	}
 };
@@ -53,9 +54,10 @@ exports['schema - like'] = {
 	}
 };
 
-exports['required'] = {
+exports['required option'] = {
 	'set required': function (test) {
 		var sh1 = new Schema();
+
 		sh1.optional();
 		sh1.required();
 		sh1.optional();
@@ -67,6 +69,7 @@ exports['required'] = {
 	},
 	'set optional': function (test) {
 		var sh1 = new Schema();
+
 		sh1.optional();
 		sh1.required();
 		sh1.optional();
@@ -77,7 +80,7 @@ exports['required'] = {
 	}
 };
 
-exports['register'] = {
+exports['register method'] = {
 	'add: name is not string': function (test) {
 		var sc1 = new Schema();
 
@@ -106,6 +109,7 @@ exports['register'] = {
 	'add: schema exists': function (test) {
 		var sc1 = new Schema();
 		var sc2 = new Schema();
+
 		Schema.register('_some_1', sc1);
 
 		test.throws(function () {
@@ -140,10 +144,12 @@ exports['register'] = {
 exports['validation error'] = {
 	'create Error': function (test) {
 		var err;
+
 		err = new Schema.ValidationError('hello', null, null);
 		test.ok(err instanceof Error);
 		test.ok(err instanceof Schema.ValidationError);
 
+		/*eslint new-cap:1 */
 		err = Schema.ValidationError('hello', null, null);
 		test.ok(err instanceof Error);
 		test.ok(err instanceof Schema.ValidationError);

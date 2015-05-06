@@ -1,12 +1,13 @@
-"use strict";
+'use strict';
 
-var _ = require('lodash');
 var tester = require('./_lib/tester');
-var inspect = require('./_lib/inspect');
 var Schema = require('./_lib/schema');
 
 var schemaWithValidation1 = new Schema().object(function (req, opt) {
-	opt('orderby', ['type string', {contains: ['ASC', 'DESC']}]);
+	opt('orderby', [
+		'type string',
+		{ contains: [ 'ASC', 'DESC' ] }
+	]);
 });
 
 exports['base usage'] = {
@@ -52,7 +53,7 @@ exports['base usage'] = {
 		schema: schemaWithValidation1,
 		vErr: {
 			rule: 'contains',
-			params: ['ASC', 'DESC'],
+			params: [ 'ASC', 'DESC' ],
 			path: [ 'orderby' ]
 		},
 		value: { orderby: 'asc' }

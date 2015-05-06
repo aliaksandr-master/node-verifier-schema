@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
 var _ = require('lodash');
 var Schema = require('./_lib/schema');
 var async = require('async');
 
 exports['Simple Usage'] = {
-	'build - equal builds made by different approaches' : function (test) {
+	'build - equal builds made by different approaches': function (test) {
 		var sh1 = new Schema().object(function (required, optional) {
 			this.field('first_name');
 			required('last_name');
@@ -22,6 +22,7 @@ exports['Simple Usage'] = {
 			this.field('middle_name').optional();
 		});
 		var sh4 = new Schema();
+
 		sh4.required('first_name');
 		sh4.field('last_name');
 		sh4.optional('middle_name');
@@ -32,31 +33,34 @@ exports['Simple Usage'] = {
 
 		test.done();
 	},
-	'verify - no specified fields' : function (test) {
+	'verify - no specified fields': function (test) {
 		var sh1 = new Schema().object(function () {
 			this.field('first_name');
 			this.required('last_name');
 			this.optional('middle_name');
 		});
+
 		sh1.verifier().verify({}, function (err) {
 			test.ok(!!err);
 
 			test.equal(err.rule, 'required');
 			test.strictEqual(err.params, null);
 			test.strictEqual(err.value, undefined);
-			test.deepEqual(err.path, ['first_name']);
+			test.deepEqual(err.path, [ 'first_name' ]);
 
 			test.done();
 		});
 	},
-	'verify - optional field isn\'t specified' : function (test) {
+	'verify - optional field isn\'t specified': function (test) {
 		var sh1 = new Schema().object(function () {
 			this.field('first_name');
 			this.required('last_name');
 			this.optional('middle_name');
 		});
-
-		var value = { first_name : 'hello', last_name : 'world' };
+		var value = {
+			first_name: 'hello',
+			last_name: 'world'
+		};
 
 		sh1.verifier().verify(value, function (err) {
 			test.ok(!err);
@@ -64,14 +68,17 @@ exports['Simple Usage'] = {
 			test.done(err);
 		});
 	},
-	'verify - correct if all available fields not empty' : function (test) {
+	'verify - correct if all available fields not empty': function (test) {
 		var sh1 = new Schema().object(function () {
 			this.field('first_name');
 			this.required('last_name');
 			this.optional('middle_name');
 		});
-
-		var value = { first_name : 'hello', last_name : 'world', middle_name : 'param-pam-pam'};
+		var value = {
+			first_name: 'hello',
+			last_name: 'world',
+			middle_name: 'param-pam-pam'
+		};
 
 		sh1.verifier().verify(value, function (err) {
 			test.ok(!err);
@@ -79,8 +86,8 @@ exports['Simple Usage'] = {
 			test.done(err);
 		});
 	},
-	'verify - excess field' : function (test) {
-		console.log(123);
+	'verify - excess field': function (test) {
+		//console.log(123);
 		var sh1 = new Schema().strict().object(function () {
 			this.field('first_name');
 			this.required('last_name');
@@ -88,11 +95,12 @@ exports['Simple Usage'] = {
 		});
 
 		var value = {
-			first_name  : 'hello',
-			last_name   : 'world',
-			middle_name : 'param-pam-pam'
+			first_name: 'hello',
+			last_name: 'world',
+			middle_name: 'param-pam-pam'
 		};
 		var _keys = _.keys(value);
+
 		value.excess_field = true;
 
 		sh1.verify(value, function (err) {
@@ -104,7 +112,7 @@ exports['Simple Usage'] = {
 			test.done();
 		});
 	},
-	'verify - ignore excess field' : function (test) {
+	'verify - ignore excess field': function (test) {
 		var sh1 = new Schema().object(function () {
 			this.field('first_name');
 			this.required('last_name');
@@ -112,10 +120,11 @@ exports['Simple Usage'] = {
 		});
 
 		var value = {
-			first_name  : 'hello',
-			last_name   : 'world',
-			middle_name : 'param-pam-pam'
+			first_name: 'hello',
+			last_name: 'world',
+			middle_name: 'param-pam-pam'
 		};
+
 		value.excess_field = true;
 
 		sh1.verifier({ ignoreExcess: true }).verify(value, function (err) {
@@ -132,6 +141,7 @@ exports['Create Schema, Register'] = {
 		var sh2 = Schema.create();
 		var sh3 = new Schema('nameForRegister1');
 		var sh4 = Schema.create('nameForRegister2');
+
 		Schema.register('someSchema1', sh1);
 		Schema.register('someSchema2', sh2);
 
@@ -150,11 +160,12 @@ exports['Object Schema Building: like'] = {
 			this.field('hello');
 			this.field('world');
 		});
-
 		var sh2 = new Schema().array(function () {
 			this.field('some');
 		});
+
 		sh2.field('myField').like(sh1);
+
 		// equal
 		var test1 = new Schema().array(function () {
 			this.field('some');
@@ -163,12 +174,15 @@ exports['Object Schema Building: like'] = {
 				this.field('world');
 			});
 		});
+
 		test.deepEqual(test1, sh2);
 
 		var sh3 = new Schema().array(function () {
 			this.field('some');
 		});
+
 		sh1.like(sh3);
+
 		var test2 = new Schema().array(function () {
 			this.field('hello');
 			this.field('world');
@@ -180,23 +194,21 @@ exports['Object Schema Building: like'] = {
 		test.done();
 	},
 	'typical': function (test) {
-		var sh1_1 = new Schema().object(function () {
+		var sh1s1 = new Schema().object(function () {
 			this.field('hello');
 			this.field('world');
 		});
-
-		var sh1_2 = new Schema('attachExampleSchema').object(function () {
+		var sh1s2 = new Schema('attachExampleSchema').object(function () {
 			this.field('hello');
 			this.field('world');
 		});
-
 		var sh2 = new Schema().array(function () {
 			this.field('some');
 		});
 
 
 		// ATTACH
-		sh1_1.field('myField').like(sh2);
+		sh1s1.field('myField').like(sh2);
 		Schema.get('attachExampleSchema').field('myField').like(sh2);
 
 
@@ -209,8 +221,8 @@ exports['Object Schema Building: like'] = {
 			});
 		});
 
-		test.deepEqual(sh1_1, sh3);
-		test.deepEqual(sh1_2, sh3);
+		test.deepEqual(sh1s1, sh3);
+		test.deepEqual(sh1s2, sh3);
 
 		test.done();
 	}
@@ -222,20 +234,21 @@ exports['Object Schema Building: object'] = {
 			r('my1');
 			o('world1');
 		});
-
 		var sh4 = new Schema().object(function (r, o) {
 			r('my2');
 			o('world2');
 		});
-
 		var sc1 = new Schema('hello2').like(sh4);
+
 		sc1.field('some1');
 		sc1.field('some2');
 
 		var sc2 = new Schema();
+
 		sc2.like(sc1); // add sh1
 
 		var sc3 = new Schema();
+
 		sc3.like(Schema.get('hello2')); // add sc1
 		sh1.field('inner').like(sc3);
 
@@ -258,9 +271,11 @@ exports['Object Schema Building: object'] = {
 exports['Object Schema Building: required and optional'] = {
 	optional: function (test) {
 		var sc1 = new Schema();
+
 		sc1.field('some').optional();
 
 		var sc2 = new Schema();
+
 		sc2.optional('some');
 
 		test.deepEqual(sc2, sc1);
@@ -269,9 +284,11 @@ exports['Object Schema Building: required and optional'] = {
 	},
 	required: function (test) {
 		var sc1 = new Schema();
+
 		sc1.field('some');
 
 		var sc2 = new Schema();
+
 		sc2.required('some');
 
 		test.deepEqual(sc2, sc1);

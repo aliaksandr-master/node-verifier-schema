@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var Schema = require('./_lib/schema');
 var tester = require('./_lib/tester');
@@ -6,9 +6,9 @@ var tester = require('./_lib/tester');
 exports.schema = {
 	clone: function (test) {
 		var s0 = new Schema().validate('type object').object(function (required, optional) {
-			required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-			required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-			optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+			required('first_name',  [ 'type string', 'min_length 3', 'max_length 20' ]);
+			required('last_name',   [ 'type string', 'min_length 3', 'max_length 20' ]);
+			optional('middle_name', [ 'type string', 'min_length 3', 'max_length 20' ]);
 		});
 
 		test.deepEqual(s0, s0.clone());
@@ -18,28 +18,24 @@ exports.schema = {
 	nestedSchema: function (test) {
 		var s0 = new Schema().object(function (required, optional) {
 			required('fio', 'type object', function (required, optional) {
-				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-				optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
+				required('first_name',  [ 'type string', 'min_length 3', 'max_length 20' ]);
+				required('last_name',   [ 'type string', 'min_length 3', 'max_length 20' ]);
+				optional('middle_name', [ 'type string', 'min_length 3', 'max_length 20' ]);
 			});
 		});
-		//consoleInspect(s0.schema);
 
 		var s1 = new Schema().validate('type object').object(function (required, optional) {
-			required('age', ['type number', 'max_value 100', 'min_value 16']);
-			required('family', ['type array', 'min_length 2', {each: ['type object']}], function (required, optional) {
-				required('first_name',  ['type string', 'min_length 3', 'max_length 20']);
-				required('last_name',   ['type string', 'min_length 3', 'max_length 20']);
-				optional('middle_name', ['type string', 'min_length 3', 'max_length 20']);
-				optional('age', ['type number', 'max_value 100', 'min_value 16']);
+			required('age', [ 'type number', 'max_value 100', 'min_value 16' ]);
+			required('family', [ 'type array', 'min_length 2', { each: [ 'type object' ] } ], function (required, optional) {
+				required('first_name',  [ 'type string', 'min_length 3', 'max_length 20' ]);
+				required('last_name',   [ 'type string', 'min_length 3', 'max_length 20' ]);
+				optional('middle_name', [ 'type string', 'min_length 3', 'max_length 20' ]);
+				optional('age', [ 'type number', 'max_value 100', 'min_value 16' ]);
 			});
-			required('school_names', ['type array', 'min_length 2', 'not empty', {each: ['type string', 'min_length 3', 'max_length 20']}]);
+			required('school_names', [ 'type array', 'min_length 2', 'not empty', { each: [ 'type string', 'min_length 3', 'max_length 20' ] } ]);
 		});
-		//consoleInspect(s1.schema);
 
 		s1.field('fio', null, s0, false);
-
-		//consoleInspect(s1.schema);
 
 		test.ok(true);
 		test.done();
@@ -114,7 +110,7 @@ exports['validate object'] = {
 			params: 'object',
 			path: []
 		},
-		value: "asdasd"
+		value: 'asdasd'
 	}),
 
 	'#7': tester({
@@ -170,7 +166,7 @@ exports['validate object'] = {
 		schema: s1,
 		vErr: {
 			rule: 'available_fields',
-			params: ['age', 'school_names'],
+			params: [ 'age', 'school_names' ],
 			path: []
 		},
 		value: {
@@ -198,7 +194,7 @@ exports['validate object'] = {
 		schema: s1,
 		vErr: {
 			rule: 'available_fields',
-			params: ['age', 'school_names'],
+			params: [ 'age', 'school_names' ],
 			path: []
 		},
 		value: {
@@ -213,7 +209,7 @@ exports['validate object'] = {
 		schema: s1,
 		vErr: {
 			rule: 'available_fields',
-			params: ['age', 'school_names'],
+			params: [ 'age', 'school_names' ],
 			path: []
 		},
 		value: {
