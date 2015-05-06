@@ -1,9 +1,12 @@
 language: node_js
 node_js:
-  - "0.10"
-  - "0.11"
+  - "stable"
+  - "unstable"
+before_script:
+  - npm i jscoverage coveralls grunt-cli nodeunit
 after_script:
-  - npm run coveralls
+  - ./node_modules/.bin/jscoverage lib
+  - NODEVERIFIERSCHEMA_COV=1 ./node_modules/.bin/nodeunit --reporter=lcov tests/ | ./node_modules/.bin/coveralls
 notifications:
   email:
     on_success: never

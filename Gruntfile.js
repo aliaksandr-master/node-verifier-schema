@@ -2,6 +2,11 @@
 
 module.exports = require('grunto')(function(grunt) {
 
+	grunt.registerTask('test', [
+		'jshint',
+		'nodeunit'
+	]);
+
 	return {
 		jshint: {
 			options: grunt.file.readJSON('.jshintrc'),
@@ -10,7 +15,12 @@ module.exports = require('grunto')(function(grunt) {
 				'!node_modules/**/*.{js,json}',
 				'!lib-cov/**/*.{js,json}'
 			]
-		}
+		},
+		nodeunit: {
+			tests: [
+				'tests/*.js'
+			]
+		},
 	};
 
 });
